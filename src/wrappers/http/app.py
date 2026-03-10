@@ -7,17 +7,20 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from roadmap_core.llm.base import LLMConfig
 from roadmap_core.models.error import ErrorResponse
 from roadmap_core.models.request import RoadmapRequest
-from roadmap_core.planner.roadmap_planner import RoadmapPlanner
+from roadmap_core.planner.llm_planner import LLMRoadmapPlanner
 
 app = FastAPI(
     title="Roadmap Design Skill",
     description="Transform ambiguous problems into implementation-ready roadmaps",
-    version="1.0.0",
+    version="1.1.0",
 )
 
-_planner = RoadmapPlanner()
+# Initialize LLM config from environment
+_llm_config = LLMConfig.from_env()
+_planner = LLMRoadmapPlanner(llm_config=_llm_config)
 
 
 @app.post("/v1/run")
@@ -46,9 +49,9 @@ async def run_roadmap(request: dict) -> dict:
         # Parse and validate request
         validated_request = RoadmapRequest.model_validate(request)
 
-        # Generate roadmap
-        response = _planner.plan(validated_request)
-        return response.model_dump()
+        # Generate roadmap (async for LLM support)
+        response = await _planner.plan_async(validated_request)
+        return response.model_dump(mode="json")
 
     except ValidationError as e:
         error = ErrorResponse.invalid_input(
@@ -93,7 +96,13 @@ async def health_check() -> dict:
     Returns:
         Health status.
     """
-    return {"status": "healthy", "version": "1.0.0"}
+    llm_available = _planner.is_llm_available()
+    return {
+        "status": "healthy",
+        "version": "1.1.0",
+        "llm_enabled": llm_available,
+        "llm_provider": _llm_config.provider.value if llm_available else "none",
+    }
 
 
 @app.exception_handler(HTTPException)
