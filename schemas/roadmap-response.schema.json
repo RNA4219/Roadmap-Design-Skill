@@ -1,0 +1,640 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-design-skill.local/schemas/roadmap-response.schema.json",
+  "title": "Roadmap Design Skill Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run",
+    "problem_definition",
+    "success_criteria",
+    "hypotheses",
+    "solution_options",
+    "experiment_plan",
+    "roadmap",
+    "risks",
+    "fallback_options",
+    "next_actions",
+    "open_questions",
+    "assumptions",
+    "failures",
+    "confidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "run": {
+      "$ref": "#/$defs/runMeta"
+    },
+    "problem_definition": {
+      "$ref": "#/$defs/problemDefinition"
+    },
+    "success_criteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/successCriterion"
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hypothesis"
+      }
+    },
+    "solution_options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/solutionOption"
+      }
+    },
+    "experiment_plan": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/experiment"
+      }
+    },
+    "roadmap": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/roadmapPhase"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/risk"
+      }
+    },
+    "fallback_options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fallback"
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nextAction"
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/openQuestion"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/failureItem"
+      }
+    },
+    "confidence": {
+      "$ref": "#/$defs/confidence"
+    }
+  },
+  "$defs": {
+    "runMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "mode",
+        "status",
+        "created_at",
+        "updated_at",
+        "planner_version",
+        "response_language"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "const": "roadmap"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "partial",
+            "failed"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "planner_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "response_language": {
+          "type": "string",
+          "minLength": 2
+        }
+      }
+    },
+    "problemDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem_id",
+        "title",
+        "statement",
+        "scope",
+        "non_goals",
+        "derived_from"
+      ],
+      "properties": {
+        "problem_id": {
+          "type": "string",
+          "pattern": "^pb_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "non_goals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "derived_from": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "successCriterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterion_id",
+        "statement",
+        "verification_method",
+        "priority"
+      ],
+      "properties": {
+        "criterion_id": {
+          "type": "string",
+          "pattern": "^sc_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis_id",
+        "statement",
+        "why_this_might_work",
+        "priority",
+        "related_insight_ids",
+        "related_constraint_ids",
+        "status"
+      ],
+      "properties": {
+        "hypothesis_id": {
+          "type": "string",
+          "pattern": "^hy_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "why_this_might_work": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "related_insight_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^in_[A-Za-z0-9_-]+$"
+          }
+        },
+        "related_constraint_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^co_[A-Za-z0-9_-]+$"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "success",
+            "failure",
+            "inconclusive"
+          ]
+        }
+      }
+    },
+    "solutionOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "title",
+        "summary",
+        "addresses_hypothesis_ids",
+        "tradeoffs",
+        "recommended"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "pattern": "^op_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "addresses_hypothesis_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^hy_[A-Za-z0-9_-]+$"
+          }
+        },
+        "tradeoffs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "recommended": {
+          "type": "boolean"
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experiment_id",
+        "title",
+        "goal",
+        "verifies_hypothesis_ids",
+        "method",
+        "success_condition",
+        "failure_signal",
+        "depends_on",
+        "estimated_effort"
+      ],
+      "properties": {
+        "experiment_id": {
+          "type": "string",
+          "pattern": "^exp_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifies_hypothesis_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^hy_[A-Za-z0-9_-]+$"
+          }
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "success_condition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "failure_signal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^exp_[A-Za-z0-9_-]+$"
+          }
+        },
+        "estimated_effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "roadmapPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase_id",
+        "order",
+        "title",
+        "goal",
+        "exit_criteria",
+        "tasks"
+      ],
+      "properties": {
+        "phase_id": {
+          "type": "string",
+          "pattern": "^ph_[A-Za-z0-9_-]+$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exit_criteria": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/roadmapTask"
+          }
+        }
+      }
+    },
+    "roadmapTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "title",
+        "description",
+        "deliverable",
+        "depends_on"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^tk_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deliverable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^tk_[A-Za-z0-9_-]+$"
+          }
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "risk_id",
+        "statement",
+        "severity",
+        "mitigation"
+      ],
+      "properties": {
+        "risk_id": {
+          "type": "string",
+          "pattern": "^rk_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "mitigation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fallback_id",
+        "trigger",
+        "statement",
+        "tradeoff"
+      ],
+      "properties": {
+        "fallback_id": {
+          "type": "string",
+          "pattern": "^fb_[A-Za-z0-9_-]+$"
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tradeoff": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "title",
+        "description",
+        "deliverable",
+        "depends_on"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "pattern": "^na_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deliverable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^na_[A-Za-z0-9_-]+$"
+          }
+        }
+      }
+    },
+    "openQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_id",
+        "statement",
+        "blocking",
+        "affects"
+      ],
+      "properties": {
+        "question_id": {
+          "type": "string",
+          "pattern": "^oq_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blocking": {
+          "type": "boolean"
+        },
+        "affects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "failureItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "failure_id",
+        "type",
+        "summary",
+        "recoverable"
+      ],
+      "properties": {
+        "failure_id": {
+          "type": "string",
+          "pattern": "^fl_[A-Za-z0-9_-]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "input_gap",
+            "scope_error",
+            "planning_blocker",
+            "internal_error"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recoverable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "reason"
+      ],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

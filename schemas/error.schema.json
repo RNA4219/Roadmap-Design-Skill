@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-design-skill.local/schemas/error.schema.json",
+  "title": "Roadmap Design Skill Error",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "error_code",
+    "message",
+    "details",
+    "trace_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "error_code": {
+      "type": "string",
+      "enum": [
+        "INVALID_INPUT",
+        "UNSUPPORTED_SCHEMA_VERSION",
+        "PROCESSING_FAILED",
+        "INTERNAL_ERROR"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "details": {
+      "type": "object"
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

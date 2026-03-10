@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0.0",
+  "run": {
+    "run_id": "run_20260310_failure",
+    "mode": "roadmap",
+    "status": "failed",
+    "created_at": "2026-03-10T13:05:00Z",
+    "updated_at": "2026-03-10T13:05:04Z",
+    "planner_version": "spec-1.0.0",
+    "response_language": "ja"
+  },
+  "problem_definition": {
+    "problem_id": "pb_too_broad",
+    "title": "課題が広すぎる",
+    "statement": "入力課題は R&D 計画へ落とすには対象境界が広すぎる。",
+    "scope": "現時点では scope を固定できないため、計画の成立に必要な不足情報の提示に留める。",
+    "non_goals": [
+      "実装順序の断定",
+      "推奨方針の確定"
+    ],
+    "derived_from": [
+      "in_missing_scope"
+    ]
+  },
+  "success_criteria": [],
+  "hypotheses": [],
+  "solution_options": [],
+  "experiment_plan": [],
+  "roadmap": [],
+  "risks": [
+    {
+      "risk_id": "rk_01",
+      "statement": "このまま計画を進めると、スコープが膨張して実験単位が定まらない。",
+      "severity": "high",
+      "mitigation": "対象ユースケースと期間制約を先に絞る。"
+    }
+  ],
+  "fallback_options": [
+    {
+      "fallback_id": "fb_01",
+      "trigger": "課題境界を 1 つに絞れない場合",
+      "statement": "problem_statement を課題ごとに分割して別 run として再入力する。",
+      "tradeoff": "上流での整理作業が増える。"
+    }
+  ],
+  "next_actions": [
+    {
+      "action_id": "na_01",
+      "title": "最初の対象ユースケースを 1 つに絞る",
+      "description": "誰のどの失敗を優先的に解くかを 1 文で固定する。",
+      "deliverable": "narrowed problem statement",
+      "depends_on": []
+    },
+    {
+      "action_id": "na_02",
+      "title": "必須制約を列挙する",
+      "description": "期間、開発人数、既存資産の 3 点を最小セットとして埋める。",
+      "deliverable": "minimum constraints set",
+      "depends_on": [
+        "na_01"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "question_id": "oq_01",
+      "statement": "このロードマップが対象とする最初のユースケースは何か。",
+      "blocking": true,
+      "affects": [
+        "scope",
+        "roadmap"
+      ]
+    },
+    {
+      "question_id": "oq_02",
+      "statement": "利用可能な既存資産のうち、再利用前提にしてよいものは何か。",
+      "blocking": true,
+      "affects": [
+        "solution_options",
+        "experiment_plan"
+      ]
+    }
+  ],
+  "assumptions": [],
+  "failures": [
+    {
+      "failure_id": "fl_01",
+      "type": "scope_error",
+      "summary": "対象境界が広すぎるため、安定した roadmap を構成できなかった。",
+      "recoverable": true
+    }
+  ],
+  "confidence": {
+    "score": 0.18,
+    "reason": "課題の対象境界と利用可能資産が不足しており、仮説と実験を安定して固定できない。"
+  }
+}

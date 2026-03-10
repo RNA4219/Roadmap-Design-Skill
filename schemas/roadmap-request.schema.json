@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roadmap-design-skill.local/schemas/roadmap-request.schema.json",
+  "title": "Roadmap Design Skill Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mode",
+    "problem_statement",
+    "insights",
+    "constraints",
+    "available_assets"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "const": "roadmap"
+    },
+    "response_language": {
+      "type": "string",
+      "minLength": 2
+    },
+    "problem_statement": {
+      "$ref": "#/$defs/problemStatement"
+    },
+    "insights": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/insightItem"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/constraintItem"
+      }
+    },
+    "available_assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/assetItem"
+      }
+    },
+    "known_failures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/knownFailure"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceRef"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "priority_hint": {
+      "type": "string",
+      "enum": [
+        "urgent",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "problemStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem_id",
+        "title",
+        "statement"
+      ],
+      "properties": {
+        "problem_id": {
+          "type": "string",
+          "pattern": "^pb_[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "background": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desired_outcome": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "insightItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "insight_id",
+        "statement"
+      ],
+      "properties": {
+        "insight_id": {
+          "type": "string",
+          "pattern": "^in_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "importance": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        }
+      }
+    },
+    "constraintItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_id",
+        "category",
+        "statement",
+        "severity"
+      ],
+      "properties": {
+        "constraint_id": {
+          "type": "string",
+          "pattern": "^co_[A-Za-z0-9_-]+$"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "time",
+            "resource",
+            "technology",
+            "team",
+            "compliance",
+            "other"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        }
+      }
+    },
+    "assetItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id",
+        "type",
+        "name",
+        "description"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^as_[A-Za-z0-9_-]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "component",
+            "dataset",
+            "document",
+            "skill",
+            "people",
+            "other"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "knownFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "failure_id",
+        "statement"
+      ],
+      "properties": {
+        "failure_id": {
+          "type": "string",
+          "pattern": "^kf_[A-Za-z0-9_-]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref_id",
+        "kind",
+        "summary"
+      ],
+      "properties": {
+        "ref_id": {
+          "type": "string",
+          "pattern": "^ev_[A-Za-z0-9_-]+$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "document",
+            "issue",
+            "experiment",
+            "note",
+            "other"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

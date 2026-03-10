@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "roadmap",
+  "response_language": "ja",
+  "problem_statement": {
+    "problem_id": "pb_agent_eval",
+    "title": "長期タスクで計画品質がぶれる",
+    "statement": "複数段のエージェント作業で、途中から計画粒度と優先順位が崩れてしまう。"
+  },
+  "insights": [
+    {
+      "insight_id": "in_scope",
+      "statement": "課題発見と計画生成が混ざると、次アクションが曖昧になりやすい。"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "co_time",
+      "category": "time",
+      "statement": "1 週間以内に MVP をまとめたい。",
+      "severity": "hard"
+    }
+  ],
+  "available_assets": [
+    {
+      "asset_id": "as_docs",
+      "type": "document",
+      "name": "既存設計メモ",
+      "description": "requirements.md と interfaces.md のドラフトがある。"
+    }
+  ]
+}

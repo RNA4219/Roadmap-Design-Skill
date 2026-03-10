@@ -1,0 +1,251 @@
+{
+  "schema_version": "1.0.0",
+  "run": {
+    "run_id": "run_20260310_success",
+    "mode": "roadmap",
+    "status": "completed",
+    "created_at": "2026-03-10T13:00:00Z",
+    "updated_at": "2026-03-10T13:00:12Z",
+    "planner_version": "spec-1.0.0",
+    "response_language": "ja"
+  },
+  "problem_definition": {
+    "problem_id": "pb_roadmap_contract",
+    "title": "ロードマップ設計ツールの契約固定",
+    "statement": "Roadmap Design Skill の MVP 契約を同期型に絞り、実装担当が迷わず着手できる schema と phase を確定する。",
+    "scope": "request / response / error schema、同期 I/F、実装順、受け入れ条件の固定までを対象にする。",
+    "non_goals": [
+      "非同期 run store の実装",
+      "外部システム連携",
+      "実運用向け認証"
+    ],
+    "derived_from": [
+      "in_contract",
+      "in_persistence",
+      "co_scope",
+      "ev_draft_02"
+    ]
+  },
+  "success_criteria": [
+    {
+      "criterion_id": "sc_01",
+      "statement": "request / response / error の schema が固定され、examples が validation を通る。",
+      "verification_method": "schema validation",
+      "priority": 1
+    },
+    {
+      "criterion_id": "sc_02",
+      "statement": "CLI / HTTP / MCP が同一 contract を参照する前提がドキュメント化されている。",
+      "verification_method": "manual review",
+      "priority": 2
+    }
+  ],
+  "hypotheses": [
+    {
+      "hypothesis_id": "hy_01",
+      "statement": "schema を先に固定すると、wrapper ごとの差分調整コストが大きく減る。",
+      "why_this_might_work": "業務ロジックではなく I/O 契約が最初の曖昧さの中心だから。",
+      "priority": 1,
+      "related_insight_ids": [
+        "in_contract"
+      ],
+      "related_constraint_ids": [
+        "co_scope"
+      ],
+      "status": "open"
+    },
+    {
+      "hypothesis_id": "hy_02",
+      "statement": "同期 MVP に絞ると、永続化責務との矛盾を避けたまま実装に着手できる。",
+      "why_this_might_work": "run store が不要になり、コア処理とラッパーの責務が単純化するから。",
+      "priority": 2,
+      "related_insight_ids": [
+        "in_persistence"
+      ],
+      "related_constraint_ids": [
+        "co_scope",
+        "co_single"
+      ],
+      "status": "open"
+    }
+  ],
+  "solution_options": [
+    {
+      "option_id": "op_01",
+      "title": "Contract-first synchronous MVP",
+      "summary": "schema、fixtures、同期 I/F を先に確定し、その後に roadmap_core を実装する。",
+      "addresses_hypothesis_ids": [
+        "hy_01",
+        "hy_02"
+      ],
+      "tradeoffs": [
+        "非同期拡張は後回しになる",
+        "初期フェーズでは UI や永続化を扱わない"
+      ],
+      "recommended": true
+    }
+  ],
+  "experiment_plan": [
+    {
+      "experiment_id": "exp_01",
+      "title": "Schema freeze",
+      "goal": "I/O 契約を固定する",
+      "verifies_hypothesis_ids": [
+        "hy_01"
+      ],
+      "method": "request / response / error schema を作り、example payload を通す。",
+      "success_condition": "4 つの example が schema validation を通る。",
+      "failure_signal": "field 名や enum の不整合で examples が通らない。",
+      "depends_on": [],
+      "estimated_effort": "0.5d"
+    },
+    {
+      "experiment_id": "exp_02",
+      "title": "Synchronous wrapper design",
+      "goal": "MVP の I/F 境界を固定する",
+      "verifies_hypothesis_ids": [
+        "hy_02"
+      ],
+      "method": "CLI / HTTP / MCP の entrypoint と status code / exit code を定義する。",
+      "success_condition": "wrapper ごとの差分が transport 層だけに閉じる。",
+      "failure_signal": "run store 前提の仕様が残る。",
+      "depends_on": [
+        "exp_01"
+      ],
+      "estimated_effort": "0.5d"
+    }
+  ],
+  "roadmap": [
+    {
+      "phase_id": "ph_01",
+      "order": 1,
+      "title": "Contract Freeze",
+      "goal": "仕様と schema を固定する。",
+      "exit_criteria": [
+        "requirements と specification の field 名が一致する",
+        "examples が schema validation を通る"
+      ],
+      "tasks": [
+        {
+          "task_id": "tk_01",
+          "title": "request / response / error schema を追加する",
+          "description": "MVP の正規契約を JSON Schema で固定する。",
+          "deliverable": "schemas/*.json",
+          "depends_on": []
+        },
+        {
+          "task_id": "tk_02",
+          "title": "examples を success / failure / minimal で揃える",
+          "description": "実装前に golden fixture を確保する。",
+          "deliverable": "examples/*.json",
+          "depends_on": [
+            "tk_01"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "ph_02",
+      "order": 2,
+      "title": "Core Planner",
+      "goal": "roadmap_core の最小実装に着手する。",
+      "exit_criteria": [
+        "valid request から valid response を返せる",
+        "broad problem で partial / failed response を返せる"
+      ],
+      "tasks": [
+        {
+          "task_id": "tk_03",
+          "title": "内部モデルと validator を実装する",
+          "description": "schema と同じ shape を内部で扱えるようにする。",
+          "deliverable": "src/roadmap_core/models + validators",
+          "depends_on": [
+            "tk_02"
+          ]
+        },
+        {
+          "task_id": "tk_04",
+          "title": "planner pipeline を実装する",
+          "description": "problem_definition から roadmap までを順に組み立てる。",
+          "deliverable": "src/roadmap_core/planner",
+          "depends_on": [
+            "tk_03"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "ph_03",
+      "order": 3,
+      "title": "Wrapper Integration",
+      "goal": "CLI / HTTP / MCP の薄い面を載せる。",
+      "exit_criteria": [
+        "3 つの wrapper が同一 contract を返す"
+      ],
+      "tasks": [
+        {
+          "task_id": "tk_05",
+          "title": "CLI / HTTP / MCP wrapper を追加する",
+          "description": "transport 固有処理だけを持つラッパーを実装する。",
+          "deliverable": "src/wrappers/*",
+          "depends_on": [
+            "tk_04"
+          ]
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk_id": "rk_01",
+      "statement": "field 定義を増やしすぎると MVP 実装コストが上がる。",
+      "severity": "medium",
+      "mitigation": "MVP 必須 field と将来拡張 field を仕様上で分けておく。"
+    }
+  ],
+  "fallback_options": [
+    {
+      "fallback_id": "fb_01",
+      "trigger": "schema の粒度が過剰で実装が遅れる場合",
+      "statement": "optional field を減らして最小 contract に寄せる。",
+      "tradeoff": "初回リリースの表現力は下がる。"
+    }
+  ],
+  "next_actions": [
+    {
+      "action_id": "na_01",
+      "title": "Schema validation の実行方法を決める",
+      "description": "採用言語に合わせて schema 検証ライブラリを選び、examples を流す最小スクリプトを用意する。",
+      "deliverable": "contract validation script",
+      "depends_on": []
+    },
+    {
+      "action_id": "na_02",
+      "title": "roadmap_core の内部モデルを作る",
+      "description": "request / response schema と 1 対 1 に近い内部モデルを定義する。",
+      "deliverable": "src/roadmap_core/models",
+      "depends_on": [
+        "na_01"
+      ]
+    },
+    {
+      "action_id": "na_03",
+      "title": "broad problem 用の失敗分岐を先に実装する",
+      "description": "見かけだけ整った roadmap を返さないための early-exit 条件を入れる。",
+      "deliverable": "failure decision logic",
+      "depends_on": [
+        "na_02"
+      ]
+    }
+  ],
+  "open_questions": [],
+  "assumptions": [
+    "MVP は同期実行のみ",
+    "複数課題バッチは上流で解決する"
+  ],
+  "failures": [],
+  "confidence": {
+    "score": 0.83,
+    "reason": "既存ドラフトに価値の核があり、今回 schema と責務境界を固定できたため高め。ただし実装言語はまだ未固定であり、wrapper の具体ライブラリ選定は残っている。"
+  }
+}

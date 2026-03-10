@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run_seed_20260310_01",
+  "mode": "roadmap",
+  "response_language": "ja",
+  "problem_statement": {
+    "problem_id": "pb_roadmap_contract",
+    "title": "ロードマップ設計ツールの契約が曖昧",
+    "statement": "要件ドラフトはあるが、実装担当が迷わず着手できる粒度まで契約と I/F が固まっていない。",
+    "background": "要件と I/F に同期 MVP と非同期拡張が混在している。",
+    "desired_outcome": "request / response schema と実装順が固まり、CLI / API / MCP で同一契約を使える状態にする。"
+  },
+  "insights": [
+    {
+      "insight_id": "in_contract",
+      "statement": "現状は出力項目の名前はあるが、型と意味論が揃っていない。",
+      "source": "既存ドラフト確認",
+      "importance": "high"
+    },
+    {
+      "insight_id": "in_persistence",
+      "statement": "永続化を責務外にしながら run status API を持つのは矛盾している。",
+      "source": "I/F レビュー",
+      "importance": "high"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "co_scope",
+      "category": "time",
+      "statement": "今回は実装コードではなく、実装準備までを完了対象にする。",
+      "severity": "hard"
+    },
+    {
+      "constraint_id": "co_single",
+      "category": "resource",
+      "statement": "単独開発前提で、薄いラッパー構成に寄せたい。",
+      "severity": "soft"
+    }
+  ],
+  "available_assets": [
+    {
+      "asset_id": "as_req",
+      "type": "document",
+      "name": "既存 requirements",
+      "description": "問題定義、仮説、実験、ロードマップの出力項目はすでに列挙されている。"
+    },
+    {
+      "asset_id": "as_if",
+      "type": "document",
+      "name": "既存 interfaces",
+      "description": "CLI / HTTP / MCP のドラフト I/F がある。"
+    },
+    {
+      "asset_id": "as_skill",
+      "type": "skill",
+      "name": "agent-tools-hub",
+      "description": "Agent_tools 系の標準入口と doc layout を参照できる。"
+    }
+  ],
+  "known_failures": [
+    {
+      "failure_id": "kf_scope_blur",
+      "statement": "責務境界を先に固定しないと、後から CLI / API / MCP の差分吸収で手戻りが増える。",
+      "source": "過去のツール設計経験"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "ref_id": "ev_draft_01",
+      "kind": "document",
+      "summary": "requirements.md に MVP の出力項目と機能要件が列挙されている。"
+    },
+    {
+      "ref_id": "ev_draft_02",
+      "kind": "document",
+      "summary": "interfaces.md に GET /v1/runs/{run_id} があり、永続化不要要件と衝突している。"
+    }
+  ],
+  "notes": [
+    "Task Seed や Issue に転記しやすい next_actions にしたい。"
+  ],
+  "priority_hint": "high",
+  "assumptions": [
+    "初回は同期 MVP だけで十分",
+    "schema を正本にしてから実装に入る"
+  ]
+}

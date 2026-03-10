@@ -1,341 +1,526 @@
-# Roadmap Design Skill
+# Roadmap Design Skill Requirements
 
 ## 1. 目的
 
-Roadmap Design Skill は、Insight Agent などの上流工程で得られた課題候補・気づき・制約条件を入力として受け取り、課題を実行可能な R&D 計画へ変換することを目的とする。
+Roadmap Design Skill は、上流工程で得られた課題候補、気づき、制約、利用可能資産を入力として受け取り、実装と検証に着手できる構造化ロードマップを生成する。
 
-本ツールの役割は、単なる提案文の生成ではなく、以下を構造化して返すことである。
-
-- 課題定義
-- 成功条件
-- 仮説
-- 解決方針候補
-- 実験計画
-- ロードマップ
-- リスク
-- フォールバック
-- 次アクション
-
-Roadmap Design Skill は「課題をどう解くか」を設計することに専念する。
+このツールの責務は「課題をどう解くかの設計」に限定する。
 
 ## 2. 背景
 
-上流工程で発見された課題候補は、そのままでは問題提起に留まりやすい。  
-実際に開発や検証へ進めるためには、課題を再定義し、仮説を立て、検証可能な工程へ分解する必要がある。
+課題候補は、そのままでは問題提起や論点整理に留まりやすい。実際に着手できる計画へ変換するには、課題を再定義し、仮説を立て、検証順と実装順を持つ工程へ分解する必要がある。
 
-Roadmap Design Skill はこの変換を担う中核コンポーネントであり、曖昧な課題から次に動ける計画を生成する。
+Roadmap Design Skill はこの変換を担う中核コンポーネントであり、文章のもっともらしさではなく、後工程で再利用できる構造化情報を返す。
 
 ## 3. スコープ
 
 ### 3.1 対象
 
-Roadmap Design Skill が扱う対象は以下とする。
-
-- 課題候補
-- 気づきや論点
+- 単一の `problem_statement`
+- 課題に紐づく `insights`
 - 制約条件
-- 利用可能な技術・資産
+- 利用可能な技術 / 資料 / 人的資産
 - 既知の失敗知見
-- 補助的なメモや注記
+- 補助的なエビデンス参照
+- 実装と検証に使う短中期ロードマップ
 
 ### 3.2 対象外
-
-以下は本ツールの責務外とする。
 
 - 課題発見そのもの
 - 検索や情報収集
 - 実験の自動実行
-- 自動実装
-- UI 生成
-- 外部ストレージへの永続化
-- 外部システムとの連携
-- 多段解析そのもの
+- 実装コードの自動生成
+- UI の自動生成
+- 外部システムとの同期
+- 長期 run store を前提とした永続化
+- 複数課題の一括計画
 
-## 4. 役割
+## 4. 今回固定する前提
 
-Roadmap Design Skill は、入力された課題をそのまま受け流すのではなく、次の段階を担う。
+### R-01 1 リクエスト 1 課題
 
-- 課題を扱える単位に再定義する
-- 成功条件を明確化する
-- 複数の仮説を立てる
-- 仮説を検証可能な実験へ落とす
-- 実装・検証順に工程を分解する
-- リスクと代替案を明示する
-- 直近で着手すべき作業を出す
+MVP では `problem_statement` は 1 件のみ扱う。複数課題の束ねや優先順位調整は上流工程の責務とする。
+
+### R-02 同期実行を正本とする
+
+MVP は同期 `run` と `validate` を正式機能とする。非同期実行や run 参照 API は将来拡張扱いとし、現時点では実装必須にしない。
+
+### R-03 契約は versioned である
+
+request / response / error には必ず `schema_version` を持たせる。初版は `1.0.0` とする。
+
+### R-04 出力は入力に根拠を持つ
+
+問題再定義、仮説、解決方針は、可能な限り `insight_id` `constraint_id` `ref_id` のいずれかへ trace できること。
+
+### R-05 計画不能も正規出力で返す
+
+十分な計画が組めない場合でも、空疎な成功レスポンスを捏造せず、`failures` `open_questions` `fallback_options` を返す。
 
 ## 5. 入力要件
 
 ### 5.1 必須入力
 
-Roadmap Design Skill は最低限、以下を受け取る。
+- `schema_version`
+- `mode`
+- `problem_statement`
+- `insights`
+- `constraints`
+- `available_assets`
 
-#### problem_statement
-- problem_id
-- title
-- statement
+### 5.2 `problem_statement`
 
-#### insights
-- 課題に紐づく気づき、論点、示唆
+`problem_statement` は以下を必須とする。
 
-#### constraints
-- 期間制約
-- リソース制約
-- 技術制約
-- 開発体制制約
+- `problem_id`
+- `title`
+- `statement`
 
-#### available_assets
-- 利用可能な技術要素
-- 既存コンポーネント
-- 実装に使える前提条件
+任意:
 
-### 5.2 任意入力
+- `background`
+- `desired_outcome`
 
-必要に応じて以下を受け取れるものとする。
+### 5.3 `insights`
 
-- known_failures
-- evidence_refs
-- notes
-- priority_hint
-- assumptions
+`insights` は 1 件以上の配列であること。
+
+各要素は以下を持つ。
+
+- `insight_id`
+- `statement`
+
+任意:
+
+- `source`
+- `importance`
+
+### 5.4 `constraints`
+
+`constraints` は 1 件以上の配列であること。
+
+各要素は以下を持つ。
+
+- `constraint_id`
+- `category`
+- `statement`
+- `severity`
+
+`category` は以下を推奨する。
+
+- `time`
+- `resource`
+- `technology`
+- `team`
+- `compliance`
+- `other`
+
+`severity` は以下を推奨する。
+
+- `hard`
+- `soft`
+
+### 5.5 `available_assets`
+
+`available_assets` は 1 件以上の配列であること。
+
+各要素は以下を持つ。
+
+- `asset_id`
+- `type`
+- `name`
+- `description`
+
+`type` は以下を推奨する。
+
+- `component`
+- `dataset`
+- `document`
+- `skill`
+- `people`
+- `other`
+
+### 5.6 任意入力
+
+- `run_id`
+- `response_language`
+- `known_failures`
+- `evidence_refs`
+- `notes`
+- `priority_hint`
+- `assumptions`
+
+### 5.7 入力の補助要件
+
+- `mode` は `roadmap` 固定
+- `response_language` 未指定時は入力言語を踏襲し、判定不能なら `ja`
+- `priority_hint` は `urgent` `high` `medium` `low` のいずれか
+- 任意入力が欠けていても hard validation error にしない
 
 ## 6. 出力要件
 
-Roadmap Design Skill は JSON を正規出力形式とし、最低限以下を返す。
+### 6.1 正規出力
 
-- problem_definition
-- success_criteria
-- hypotheses
-- solution_options
-- experiment_plan
-- roadmap
-- risks
-- fallback_options
-- next_actions
+レスポンスは JSON を正規形式とし、以下の top-level key を持つ。
 
-必要に応じて以下を含めてもよい。
+- `schema_version`
+- `run`
+- `problem_definition`
+- `success_criteria`
+- `hypotheses`
+- `solution_options`
+- `experiment_plan`
+- `roadmap`
+- `risks`
+- `fallback_options`
+- `next_actions`
+- `open_questions`
+- `assumptions`
+- `failures`
+- `confidence`
 
-- open_questions
-- assumptions
-- failures
-- confidence
+### 6.2 `run`
+
+`run` は最低限以下を持つ。
+
+- `run_id`
+- `mode`
+- `status`
+- `created_at`
+- `updated_at`
+- `planner_version`
+- `response_language`
+
+`status` は以下を持てる。
+
+- `completed`
+- `partial`
+- `failed`
+
+### 6.3 `problem_definition`
+
+以下を必須とする。
+
+- `problem_id`
+- `title`
+- `statement`
+- `scope`
+- `non_goals`
+- `derived_from`
+
+### 6.4 `success_criteria`
+
+`success_criteria` は配列とし、各要素は以下を持つ。
+
+- `criterion_id`
+- `statement`
+- `verification_method`
+- `priority`
+
+要件:
+
+- 正常系では 1 件以上返す
+- 検証方法を持つ
+- 願望だけで終わらない
+
+### 6.5 `hypotheses`
+
+各要素は以下を持つ。
+
+- `hypothesis_id`
+- `statement`
+- `why_this_might_work`
+- `priority`
+- `related_insight_ids`
+- `related_constraint_ids`
+- `status`
+
+要件:
+
+- 正常系では 2 件以上返す
+- 検証可能な表現にする
+- `status` は `open` `success` `failure` `inconclusive` のいずれか
+
+### 6.6 `solution_options`
+
+各要素は以下を持つ。
+
+- `option_id`
+- `title`
+- `summary`
+- `addresses_hypothesis_ids`
+- `tradeoffs`
+- `recommended`
+
+### 6.7 `experiment_plan`
+
+各要素は以下を持つ。
+
+- `experiment_id`
+- `title`
+- `goal`
+- `verifies_hypothesis_ids`
+- `method`
+- `success_condition`
+- `failure_signal`
+- `depends_on`
+- `estimated_effort`
+
+要件:
+
+- 仮説と紐付く
+- 依存関係が自己循環しない
+- 小さく試せる単位に寄せる
+
+### 6.8 `roadmap`
+
+`roadmap` は phase 配列とし、各 phase は以下を持つ。
+
+- `phase_id`
+- `order`
+- `title`
+- `goal`
+- `exit_criteria`
+- `tasks`
+
+`tasks[*]` は以下を持つ。
+
+- `task_id`
+- `title`
+- `description`
+- `deliverable`
+- `depends_on`
+
+要件:
+
+- phase は依存順または時系列順
+- 各 phase は task を 1 件以上持つ
+- phase 1 に着手可能な `next_actions` と整合する
+
+### 6.9 `risks`
+
+各要素は以下を持つ。
+
+- `risk_id`
+- `statement`
+- `severity`
+- `mitigation`
+
+### 6.10 `fallback_options`
+
+各要素は以下を持つ。
+
+- `fallback_id`
+- `trigger`
+- `statement`
+- `tradeoff`
+
+### 6.11 `next_actions`
+
+`next_actions` は構造化オブジェクト配列とする。
+
+各要素は以下を持つ。
+
+- `action_id`
+- `title`
+- `description`
+- `deliverable`
+- `depends_on`
+
+要件:
+
+- 正常系では 3 件以上を推奨
+- 直近で着手可能なものを優先
+- deliverable が明示される
+
+### 6.12 `open_questions`
+
+各要素は以下を持つ。
+
+- `question_id`
+- `statement`
+- `blocking`
+- `affects`
+
+### 6.13 `failures`
+
+各要素は以下を持つ。
+
+- `failure_id`
+- `type`
+- `summary`
+- `recoverable`
+
+`type` は以下を推奨する。
+
+- `input_gap`
+- `scope_error`
+- `planning_blocker`
+- `internal_error`
+
+### 6.14 `confidence`
+
+`confidence` は以下を持つ。
+
+- `score`
+- `reason`
+
+要件:
+
+- `score` は 0.0 以上 1.0 以下
+- 失敗や未解決事項を隠すために使わない
 
 ## 7. 機能要件
 
 ### F-01 課題再定義
 
-入力された課題候補を、実験や実装に耐える課題定義へ再構成すること。
+- 広すぎる課題は scope を絞る
+- 絞れない部分は `open_questions` へ逃がす
+- `non_goals` を明示し、扱わない境界を固定する
 
-要件:
-- 課題が広すぎる場合はスコープを絞る
-- 不明瞭な場合は曖昧さを残したまま open_questions に分離する
-- 課題定義は扱える境界を持つこと
+### F-02 成功条件生成
 
-### F-02 成功条件の明確化
-
-課題に対して、何をもって前進とみなすかを列挙すること。
-
-要件:
-- success_criteria は検証可能であること
-- 少なくとも 1 つ以上は具体的な確認条件を含むこと
-- 理念や願望だけで終わらないこと
+- 成功条件を検証可能な単位で返す
+- 少なくとも 1 件は具体的確認方法を持つ
 
 ### F-03 仮説生成
 
-課題に対して複数の仮説を生成すること。
+- 複数仮説を生成する
+- 優先度を付ける
+- 入力 insight / constraint と紐づける
 
-要件:
-- 仮説は最低 2 件以上出力できること
-- 仮説は検証可能な形で記述されること
-- 各仮説に優先度または順序付けができること
-- 1案決め打ちにしないこと
+### F-04 解決方針候補生成
 
-### F-04 解決方針候補の生成
-
-仮説群を踏まえて、実装または検証の方針候補を生成すること。
-
-要件:
-- solution_options を 1 件以上出力できること
-- 各 option は要約を持つこと
-- option 同士の違いが分かること
+- 複数方針を比較可能な形で返す
+- `tradeoffs` を持つ
+- 少なくとも 1 つに `recommended=true` を付けられる
 
 ### F-05 実験計画生成
 
-仮説を PoC や検証可能な最小単位へ分解すること。
-
-要件:
-- experiment ごとに目的を持つこと
-- 実験は 1 回で試せる最小単位に寄せること
-- 依存関係を表現できること
-- 小さく始められる順序になっていること
+- 仮説ごとに検証手段を割り当てる
+- 成功条件と失敗シグナルを持つ
+- 小さく始められる順に並べる
 
 ### F-06 ロードマップ生成
 
-工程を phase 単位で整理し、順序立てて出力すること。
+- phase 単位で整理する
+- phase は実装順または依存順で並ぶ
+- deliverable ベースの task を返す
 
-要件:
-- roadmap は phase 単位で構成されること
-- 各 phase は tasks を持つこと
-- phase は時系列または依存順に並んでいること
-- 実行可能な粒度であること
+### F-07 リスク / フォールバック生成
 
-### F-07 リスク生成
+- リスクは mitigation を持つ
+- フォールバックは trigger と tradeoff を持つ
+- 詰まったときの次善策を示す
 
-進行上のリスクを明示すること。
+### F-08 次アクション生成
 
-要件:
-- risks を 1 件以上返せること
-- 実装、設計、検証、運用のいずれかのリスクを表現できること
-- 具体性があること
+- 直近で着手可能な作業を返す
+- Task Seed や Issue に転記しやすい粒度にする
 
-### F-08 フォールバック生成
+### F-09 構造化出力
 
-失敗時や詰まり時の代替案を返すこと。
+- 同一 schema を CLI / HTTP API / MCP で利用できる
+- JSON Schema で検証可能である
 
-要件:
-- fallback_options を 1 件以上返せること
-- 現実的な次善策であること
-- 計画不能時でも何を見直すべきかを示せること
+### F-10 安定順序
 
-### F-09 次アクション生成
+- `hypotheses` `experiment_plan` `roadmap` `next_actions` の順序は入力が同じなら極端にぶれない
+- ID prefix は固定する
 
-直近で着手すべき作業を明示すること。
+## 8. バリデーション要件
 
-要件:
-- next_actions を複数返せること
-- 抽象論ではなく実作業単位であること
-- すぐに着手可能な内容を含むこと
+### V-01 Hard validation error
 
-### F-10 構造化出力
+以下は hard error とする。
 
-全結果を機械可読な JSON で返すこと。
+- `schema_version` 不一致
+- `mode` 不一致
+- `problem_statement.statement` 欠落
+- `insights` 空配列
+- `constraints` 空配列
+- `available_assets` 空配列
 
-要件:
-- 同一 schema を CLI / API / MCP で利用できること
-- 後工程で検証可能であること
-- JSON schema validation を前提にできること
+### V-02 Soft planning failure
 
-## 8. 非機能要件
+以下は structured response で返す。
+
+- 課題が広すぎて安定した計画を作れない
+- 制約が相互矛盾している
+- 利用可能資産が曖昧すぎて進行案を固定できない
+
+### V-03 Error envelope
+
+hard error 時は別途 `error.schema.json` に準拠した error envelope を返す。
+
+## 9. 非機能要件
 
 ### N-01 薄いラッパー構成
 
-- CLI / API / MCP は薄いラッパーとする
-- 業務ロジックは `roadmap_core` に集約する
+- CLI / HTTP API / MCP は薄いラッパー
+- 業務ロジックは `roadmap_core` に集約
 
 ### N-02 単一利用前提
 
-- 自分用ツールとして使う前提とする
-- 認証やマルチテナントは対象外とする
+- 自分用ツールを前提とする
+- 認証、権限分離、マルチテナントは対象外
 
-### N-03 実行形態
+### N-03 純粋性優先
 
-- 単発実行を正本とする
-- 必要に応じて非同期バッチに対応可能とする
-- コアロジックは入出力の純粋性を優先する
+- `roadmap_core` は入出力の純粋性を優先する
+- 永続化の有無に依存しない
 
 ### N-04 安定性
 
-- 同一入力に対して極端に不安定な出力を避ける
-- 不明な点を無理に補完しない
-- 不足情報は open_questions へ逃がせること
+- 同一入力に対して過度に不安定な出力を避ける
+- 不明点は無理に埋めない
 
 ### N-05 可観測性
 
-- run_id を持てること
-- 処理結果を status 付きで返せること
-- 失敗時も構造化された応答を返せること
+- `run_id` を持つ
+- `planner_version` を返す
+- 失敗時も構造化情報を保持する
 
 ### N-06 保守性
 
-- 責務が roadmap_core に閉じること
-- 上流の課題発見ロジックと混ざらないこと
-- 外部連携なしで単体テストしやすいこと
+- 上流の課題発見ロジックと混在させない
+- schema と examples を回帰テストの起点にできる
 
-## 9. 失敗時要件
+### N-07 セキュリティ / 取り扱い
 
-Roadmap Design Skill は、十分な計画を組めない場合でも結果を捨てない。
+- 外部送信を前提としない
+- notes や evidence をログへ全文転記しない
+- 将来ログを持つ場合も最小限の要約に留める
 
-要件:
-- failures を返せること
-- open_questions を返せること
-- fallback_options を返せること
-- confidence を低くして返せること
-- 無理にそれらしい計画を捏造しないこと
+## 10. ID / 命名規則
 
-## 10. データ要件
+- `problem_id`: `pb_`
+- `criterion_id`: `sc_`
+- `hypothesis_id`: `hy_`
+- `option_id`: `op_`
+- `experiment_id`: `exp_`
+- `phase_id`: `ph_`
+- `task_id`: `tk_`
+- `risk_id`: `rk_`
+- `fallback_id`: `fb_`
+- `action_id`: `na_`
+- `question_id`: `oq_`
+- `failure_id`: `fl_`
 
-最低限必要な識別子は以下とする。
+## 11. MVP 受け入れ条件
 
-- run_id
-- problem_id
-- hypothesis_id
-- experiment_id
-- option_id
-- risk_id
-- fallback_id
-
-推奨 status は以下とする。
-
-- queued
-- running
-- completed
-- failed
-
-必要に応じて出力内容の状態として以下を用いる。
-
-- success
-- failure
-- inconclusive
-- open
-
-## 11. MVP 要件
-
-### MVP-1
-以下を返せること。
-
-- problem_definition
-- success_criteria
-- hypotheses
-- roadmap
-- next_actions
-
-### MVP-2
-以下を追加する。
-
-- solution_options
-- experiment_plan
-- risks
-- fallback_options
-
-### MVP-3
-以下を追加する。
-
-- failures
-- open_questions
-- confidence
-- 非同期実行への対応準備
-
-## 12. 受け入れ条件
-
-Roadmap Design Skill は、以下を満たしたとき MVP として受け入れ可能とする。
-
-- 1つの problem_statement から課題再定義を返せる
-- 仮説を 2 件以上出せる
+- 1 件の `problem_statement` から structured response を返せる
+- 正常系で 2 件以上の仮説を返せる
 - 仮説ごとに experiment を紐づけられる
-- roadmap を phase 単位で返せる
-- risks と fallback_options を返せる
-- 入力不足時に failures と open_questions を返せる
-- JSON として機械可読である
+- roadmap が phase 単位で返る
+- next_actions が成果物単位になっている
+- 計画不能時に `failures` と `open_questions` を返せる
+- request / response / error が schema validation を通る
 
-## 13. 設計原則
+## 12. 将来拡張
 
-- Roadmap Design Skill は「解決を設計する」ことに専念する
-- 問題発見は別コンポーネントの責務とする
-- 検索や取得は別工程とする
-- コア価値は「仮説生成」と「工程分解」に置く
-- 賢く見える文章より、再利用可能な構造を優先する
-- 計画不能な場合は、不能な理由を返す
-
-## 14. 現時点の判断
-
-Roadmap Design Skill は、完成品を先に目指すのではなく、MVP として段階的に育てる前提で進める。  
-まずは I/F と責務を固定し、実装しながら粒度や生成品質を調整する。
+- 非同期 submit / status
+- run store
+- 複数課題バッチ
+- 外部連携
+- 長期改善ループ
