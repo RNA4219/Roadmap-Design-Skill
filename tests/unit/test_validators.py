@@ -56,33 +56,32 @@ class TestRequestValidator:
 
     def test_empty_insights_fails(self, validator):
         """Test that empty insights fails validation."""
-        request = RoadmapRequest(
-            schema_version="1.0.0",
-            mode="roadmap",
-            problem_statement=ProblemStatement(
-                problem_id="pb_test",
-                title="Test",
-                statement="Test",
-            ),
-            insights=[],
-            constraints=[
-                ConstraintItem(
-                    constraint_id="co_01",
-                    category=ConstraintCategory.TIME,
+        # Pydantic validation catches this at model creation time
+        # The test verifies that RoadmapRequest enforces min_items=1 for insights
+        with pytest.raises(Exception):  # ValidationError from Pydantic
+            RoadmapRequest(
+                schema_version="1.0.0",
+                mode="roadmap",
+                problem_statement=ProblemStatement(
+                    problem_id="pb_test",
+                    title="Test",
                     statement="Test",
-                    severity=ConstraintSeverity.HARD,
-                )
-            ],
-            available_assets=[
-                AssetItem(
-                    asset_id="as_01",
-                    type=AssetType.DOCUMENT,
-                    name="Test",
-                    description="Test",
-                )
-            ],
-        )
-        # This should fail at Pydantic validation level, not business logic
-        # But if it somehow gets through, our validator should catch it
-        with pytest.raises(Exception):
-            RoadmapRequest.model_validate(request.model_dump())
+                ),
+                insights=[],  # This should fail Pydantic validation
+                constraints=[
+                    ConstraintItem(
+                        constraint_id="co_01",
+                        category=ConstraintCategory.TIME,
+                        statement="Test",
+                        severity=ConstraintSeverity.HARD,
+                    )
+                ],
+                available_assets=[
+                    AssetItem(
+                        asset_id="as_01",
+                        type=AssetType.DOCUMENT,
+                        name="Test",
+                        description="Test",
+                    )
+                ],
+            )

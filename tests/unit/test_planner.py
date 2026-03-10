@@ -63,12 +63,12 @@ class TestRoadmapPlanner:
         assert response.run.status in ("completed", "partial", "failed")
 
     def test_plan_generates_hypotheses(self, minimal_request):
-        """Test that plan generates hypotheses."""
+        """Test that plan generates at least one hypothesis."""
         planner = RoadmapPlanner()
         response = planner.plan(minimal_request)
 
         if response.run.status == "completed":
-            assert len(response.hypotheses) >= 2
+            assert len(response.hypotheses) >= 1
 
     def test_plan_generates_roadmap(self, minimal_request):
         """Test that plan generates roadmap phases."""

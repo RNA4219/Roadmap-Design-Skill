@@ -92,8 +92,8 @@ class TestEndToEnd:
         # Generate response
         response = planner.plan(valid_request)
 
-        # Convert to dict for schema validation
-        response_dict = response.model_dump()
+        # Convert to dict for schema validation (use mode='json' for datetime serialization)
+        response_dict = response.model_dump(mode='json')
 
         # Validate against schema
         errors = schema_validator.validate_response(response_dict)
