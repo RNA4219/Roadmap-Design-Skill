@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-import uuid
 from datetime import datetime, timezone
 
 from roadmap_core.llm.base import BaseLLMProvider, LLMConfig, LLMProviderType
@@ -36,15 +34,18 @@ class LLMRoadmapPlanner:
         """
         self._deterministic_planner = DeterministicPlanner()
         self._prompt_templates = PromptTemplates()
-
-        if llm_provider:
-            self._llm = llm_provider
-        elif llm_config and llm_config.provider != LLMProviderType.NONE:
-            self._llm = create_provider(llm_config)
-        else:
-            self._llm = None
-
+        self._llm_config = llm_config
+        self._llm = llm_provider
         self._planner_version = "1.1.0-llm"
+
+    def _get_llm(self) -> BaseLLMProvider | None:
+        """Create the provider lazily so deterministic runs stay fast."""
+        if self._llm is not None:
+            return self._llm
+        if self._llm_config is None or self._llm_config.provider == LLMProviderType.NONE:
+            return None
+        self._llm = create_provider(self._llm_config)
+        return self._llm
 
     def is_llm_available(self) -> bool:
         """Check if LLM is available.
@@ -52,7 +53,11 @@ class LLMRoadmapPlanner:
         Returns:
             True if LLM is configured and available.
         """
-        return self._llm is not None and self._llm.is_available()
+        try:
+            llm = self._get_llm()
+        except Exception:
+            return False
+        return llm is not None and llm.is_available()
 
     async def plan_async(self, request: RoadmapRequest) -> RoadmapResponse:
         """Generate roadmap asynchronously (supports LLM calls).
@@ -63,19 +68,18 @@ class LLMRoadmapPlanner:
         Returns:
             Enhanced RoadmapResponse.
         """
-        # Step 1: Generate baseline with deterministic planner
         baseline_response = self._deterministic_planner.plan(request)
 
-        # If LLM not available, return baseline
         if not self.is_llm_available():
             return baseline_response
 
-        # Step 2: Enhance with LLM
         try:
             enhanced_response = await self._enhance_with_llm(request, baseline_response)
             return enhanced_response
-        except Exception:
-            # Fallback to baseline on LLM error
+        except Exception as e:
+            import sys
+
+            print(f"LLM enhancement failed: {e}", file=sys.stderr)
             return baseline_response
 
     def plan(self, request: RoadmapRequest) -> RoadmapResponse:
@@ -89,8 +93,6 @@ class LLMRoadmapPlanner:
         Returns:
             RoadmapResponse (deterministic baseline if no LLM).
         """
-        # For sync API, we use deterministic planner
-        # LLM enhancement requires async context
         return self._deterministic_planner.plan(request)
 
     async def _enhance_with_llm(
@@ -98,16 +100,11 @@ class LLMRoadmapPlanner:
         request: RoadmapRequest,
         baseline: RoadmapResponse,
     ) -> RoadmapResponse:
-        """Enhance baseline roadmap with LLM.
+        """Enhance baseline roadmap with LLM."""
+        llm = self._get_llm()
+        if llm is None:
+            return baseline
 
-        Args:
-            request: Original request.
-            baseline: Baseline response from deterministic planner.
-
-        Returns:
-            Enhanced RoadmapResponse.
-        """
-        # Generate prompt for LLM
         system_prompt = self._prompt_templates.get_system_prompt(
             language=request.response_language or "en"
         )
@@ -116,14 +113,12 @@ class LLMRoadmapPlanner:
             baseline=baseline.model_dump(mode="json"),
         )
 
-        # Call LLM
-        llm_response = await self._llm.generate_json(
+        llm_response = await llm.generate_json(
             prompt=user_prompt,
             system_prompt=system_prompt,
-            temperature=0.5,  # Lower temperature for more consistent output
+            temperature=0.5,
         )
 
-        # Parse and validate LLM response
         return self._parse_llm_response(llm_response, baseline)
 
     def _parse_llm_response(
@@ -131,27 +126,12 @@ class LLMRoadmapPlanner:
         llm_output: dict,
         fallback: RoadmapResponse,
     ) -> RoadmapResponse:
-        """Parse LLM output into RoadmapResponse.
-
-        Args:
-            llm_output: Raw LLM output.
-            fallback: Fallback response if parsing fails.
-
-        Returns:
-            Validated RoadmapResponse.
-        """
+        """Parse LLM output into RoadmapResponse."""
         try:
-            # Update timestamp
             now = datetime.now(timezone.utc)
-
-            # Build response from LLM output
             response = RoadmapResponse.model_validate(llm_output)
-
-            # Update run metadata
             response.run.updated_at = now
             response.run.planner_version = self._planner_version
-
             return response
         except Exception:
-            # Return fallback on parsing error
             return fallback

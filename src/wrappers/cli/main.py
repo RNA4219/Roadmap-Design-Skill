@@ -13,11 +13,36 @@ from pydantic import ValidationError
 from roadmap_core.llm.base import LLMConfig
 from roadmap_core.models.error import ErrorResponse
 from roadmap_core.models.request import RoadmapRequest
-from roadmap_core.planner.llm_planner import LLMRoadmapPlanner
 from roadmap_core.presenters.json_presenter import JsonPresenter
 
 
-def run(input_path: str | None = None, output_path: str | None = None, use_llm: bool = True) -> int:
+def load_dotenv_if_present() -> None:
+    """Load the nearest .env file when python-dotenv is available."""
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+
+    candidates = [
+        Path(".env"),
+        Path(__file__).resolve().parents[3] / ".env",
+    ]
+    for env_path in candidates:
+        if env_path.exists():
+            load_dotenv(env_path)
+            return
+
+
+def resolve_use_llm(explicit_enable: bool, explicit_disable: bool) -> bool:
+    """Resolve whether CLI execution should use the LLM path."""
+    if explicit_enable:
+        return True
+    if explicit_disable:
+        return False
+    return LLMConfig.get_env_flag("RDS_CLI_USE_LLM", default=False)
+
+
+def run(input_path: str | None = None, output_path: str | None = None, use_llm: bool = False) -> int:
     """Run the roadmap planner from CLI.
 
     Args:
@@ -29,16 +54,15 @@ def run(input_path: str | None = None, output_path: str | None = None, use_llm: 
         Exit code: 0 for success, 1 for error.
     """
     presenter = JsonPresenter()
+    load_dotenv_if_present()
 
     try:
-        # Read input
         if input_path:
             with open(input_path, encoding="utf-8") as f:
                 input_data = json.load(f)
         else:
             input_data = json.load(sys.stdin)
 
-        # Parse and validate request
         try:
             request = RoadmapRequest.model_validate(input_data)
         except ValidationError as e:
@@ -55,21 +79,17 @@ def run(input_path: str | None = None, output_path: str | None = None, use_llm: 
                 print(output, file=sys.stderr)
             return 1
 
-        # Initialize planner with LLM config
         if use_llm:
-            llm_config = LLMConfig.from_env()
-            planner = LLMRoadmapPlanner(llm_config=llm_config)
-        else:
-            from roadmap_core.planner.roadmap_planner import RoadmapPlanner
-            planner = RoadmapPlanner()
+            from roadmap_core.planner.llm_planner import LLMRoadmapPlanner
 
-        # Generate roadmap (use async for LLM support)
-        if hasattr(planner, 'plan_async'):
+            planner = LLMRoadmapPlanner(llm_config=LLMConfig.from_env())
             response = asyncio.run(planner.plan_async(request))
         else:
+            from roadmap_core.planner.roadmap_planner import RoadmapPlanner
+
+            planner = RoadmapPlanner()
             response = planner.plan(request)
 
-        # Output result
         output = presenter.present_response(response)
         if output_path:
             with open(output_path, "w", encoding="utf-8") as f:
@@ -77,7 +97,6 @@ def run(input_path: str | None = None, output_path: str | None = None, use_llm: 
         else:
             print(output)
 
-        # Return appropriate exit code
         return 0 if response.run.status == "completed" else 1
 
     except json.JSONDecodeError as e:
@@ -122,10 +141,16 @@ def main() -> int:
         type=str,
         help="Path to output JSON file (default: stdout)",
     )
-    parser.add_argument(
+    llm_group = parser.add_mutually_exclusive_group()
+    llm_group.add_argument(
+        "--llm",
+        action="store_true",
+        help="Enable LLM enhancement for this run",
+    )
+    llm_group.add_argument(
         "--no-llm",
         action="store_true",
-        help="Disable LLM enhancement (use deterministic planner only)",
+        help="Force deterministic mode even when RDS_CLI_USE_LLM=1",
     )
     parser.add_argument(
         "--version",
@@ -134,8 +159,10 @@ def main() -> int:
     )
 
     args = parser.parse_args()
-    return run(input_path=args.input, output_path=args.output, use_llm=not args.no_llm)
+    use_llm = resolve_use_llm(args.llm, args.no_llm)
+    return run(input_path=args.input, output_path=args.output, use_llm=use_llm)
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

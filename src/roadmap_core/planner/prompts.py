@@ -104,27 +104,25 @@ Use appropriate ID prefixes:
         Returns:
             Enhancement prompt string.
         """
-        return f"""# Task
-Enhance the following baseline roadmap to create a more comprehensive and actionable plan.
+        # Simplified prompt to avoid timeout
+        problem = request.get("problem_statement", {})
+        insights = request.get("insights", [])[:2]  # Limit to 2 insights
+        constraints = request.get("constraints", [])[:2]  # Limit to 2 constraints
 
-# Original Request
-```json
-{json.dumps(request, indent=2, ensure_ascii=False)}
-```
+        return f"""Enhance this roadmap for: {problem.get('title', 'Unknown')}
 
-# Baseline Roadmap
-```json
-{json.dumps(baseline, indent=2, ensure_ascii=False)}
-```
+Problem: {problem.get('statement', '')[:200]}
 
-# Enhancement Requirements
-1. **Hypotheses**: Add at least 2-3 well-structured hypotheses with clear reasoning
-2. **Experiments**: Design experiments that directly validate the hypotheses
-3. **Roadmap Phases**: Ensure phases have clear goals and exit criteria
-4. **Tasks**: Make tasks specific with clear deliverables
-5. **Risks**: Identify realistic risks based on the problem context
-6. **Next Actions**: Provide 3-5 actionable next steps
+Key Insights: {[i.get('statement', '')[:50] for i in insights]}
+Constraints: {[c.get('statement', '')[:50] for c in constraints]}
 
-# Output
-Return the enhanced roadmap as a complete JSON object matching the response schema.
-Ensure all IDs follow the required prefixes and all required fields are present."""
+Baseline Roadmap:
+{json.dumps(baseline.get('roadmap', []), ensure_ascii=False)}
+
+Return enhanced JSON with:
+1. Better hypotheses (2-3)
+2. Specific experiments
+3. Realistic risks
+4. Actionable next_actions
+
+Output only valid JSON matching the schema."""

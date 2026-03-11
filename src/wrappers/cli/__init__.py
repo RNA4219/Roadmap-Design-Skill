@@ -1,5 +1,3 @@
-"""CLI wrapper module."""
+"""CLI wrapper package."""
 
-from wrappers.cli.main import main, run
-
-__all__ = ["main", "run"]
+__all__ = ["main"]

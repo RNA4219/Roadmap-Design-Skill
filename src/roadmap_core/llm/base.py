@@ -13,6 +13,7 @@ class LLMProviderType(str, Enum):
 
     OPENAI = "openai"
     ALIBABA = "alibaba"
+    OPENROUTER = "openrouter"
     LOCAL = "local"
     NONE = "none"  # Deterministic fallback
 
@@ -30,26 +31,91 @@ class LLMConfig:
     temperature: float = 0.7
     extra: dict[str, Any] = field(default_factory=dict)
 
+    @staticmethod
+    def get_env_flag(name: str, default: bool = False) -> bool:
+        """Read a boolean environment flag."""
+        import os
+
+        value = os.getenv(name)
+        if value is None:
+            return default
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _get_first_env(*names: str, default: str = "") -> str:
+        """Return the first non-empty environment value."""
+        import os
+
+        for name in names:
+            value = os.getenv(name)
+            if value:
+                return value
+        return default
+
     @classmethod
-    def from_env(cls) -> "LLMConfig":
+    def from_env(
+        cls,
+        *,
+        enable_var: str | None = None,
+        default_enabled: bool = True,
+    ) -> "LLMConfig":
         """Create config from environment variables.
+
+        Args:
+            enable_var: Optional boolean env var that gates LLM usage.
+            default_enabled: Default gate value when enable_var is unset.
 
         Returns:
             LLMConfig populated from environment.
         """
         import os
 
-        provider_str = os.getenv("RDS_LLM_PROVIDER", "none").lower()
-        provider = LLMProviderType(provider_str) if provider_str in [p.value for p in LLMProviderType] else LLMProviderType.NONE
+        if enable_var is not None and not cls.get_env_flag(enable_var, default_enabled):
+            return cls(provider=LLMProviderType.NONE)
+
+        provider_str = os.getenv("LLM_PROVIDER", "none").lower()
+        provider = (
+            LLMProviderType(provider_str)
+            if provider_str in {p.value for p in LLMProviderType}
+            else LLMProviderType.NONE
+        )
+
+        api_key = ""
+        model = ""
+        base_url = None
+        timeout_seconds = int(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+
+        if provider == LLMProviderType.OPENAI:
+            api_key = os.getenv("OPENAI_API_KEY", "")
+            model = os.getenv("LLM_MODEL", "gpt-4o-mini")
+            base_url = os.getenv("LLM_BASE_URL")
+            timeout_seconds = int(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+        elif provider == LLMProviderType.ALIBABA:
+            api_key = os.getenv("DASHSCOPE_API_KEY", "")
+            model = os.getenv("LLM_MODEL", "qwen-plus")
+            base_url = os.getenv("LLM_BASE_URL")
+            timeout_seconds = int(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+        elif provider == LLMProviderType.OPENROUTER:
+            api_key = os.getenv("OPENROUTER_API_KEY", "")
+            model = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
+            base_url = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+            timeout_seconds = int(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+        elif provider == LLMProviderType.LOCAL:
+            model = os.getenv("LLM_MODEL", "llama3")
+            base_url = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
+            timeout_seconds = int(os.getenv("LLM_TIMEOUT_SECONDS", "180"))
+        else:
+            api_key = os.getenv("LLM_API_KEY", "")
+            model = os.getenv("LLM_MODEL", "")
 
         return cls(
             provider=provider,
-            model=os.getenv("RDS_LLM_MODEL", ""),
-            api_key=os.getenv("RDS_LLM_API_KEY", ""),
-            base_url=os.getenv("RDS_LLM_BASE_URL"),
-            timeout_seconds=int(os.getenv("RDS_LLM_TIMEOUT_SECONDS", "60")),
-            max_tokens=int(os.getenv("RDS_LLM_MAX_TOKENS", "4096")),
-            temperature=float(os.getenv("RDS_LLM_TEMPERATURE", "0.7")),
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "8192")),
+            temperature=float(os.getenv("LLM_TEMPERATURE", "0.7")),
         )
 
 

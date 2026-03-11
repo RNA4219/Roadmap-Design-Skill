@@ -2,8 +2,9 @@
 
 from roadmap_core.llm.base import BaseLLMProvider, LLMConfig, LLMResponse
 from roadmap_core.llm.factory import create_provider, get_default_provider
-from roadmap_core.llm.providers.openai_provider import OpenAIProvider
 from roadmap_core.llm.providers.alibaba_provider import AlibabaProvider
+from roadmap_core.llm.providers.openai_provider import OpenAIProvider
+from roadmap_core.llm.providers.openrouter_provider import OpenRouterProvider
 
 __all__ = [
     "BaseLLMProvider",
@@ -11,6 +12,7 @@ __all__ = [
     "LLMResponse",
     "OpenAIProvider",
     "AlibabaProvider",
+    "OpenRouterProvider",
     "create_provider",
     "get_default_provider",
 ]

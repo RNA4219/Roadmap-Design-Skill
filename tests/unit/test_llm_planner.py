@@ -118,10 +118,51 @@ class TestLLMConfig:
 
     def test_from_env_defaults(self, monkeypatch):
         """Test config from environment defaults."""
-        for key in ["RDS_LLM_PROVIDER", "RDS_LLM_MODEL", "RDS_LLM_API_KEY"]:
+        for key in ["LLM_PROVIDER", "LLM_MODEL", "LLM_API_KEY"]:
             monkeypatch.delenv(key, raising=False)
 
         config = LLMConfig.from_env()
         assert config.provider == LLMProviderType.NONE
         assert config.model == ""
         assert config.api_key == ""
+
+    def test_from_env_respects_enable_var(self, monkeypatch):
+        """Test config can disable LLM even when provider is configured."""
+        monkeypatch.setenv("LLM_PROVIDER", "alibaba")
+        monkeypatch.setenv("RDS_HTTP_USE_LLM", "0")
+
+        config = LLMConfig.from_env(enable_var="RDS_HTTP_USE_LLM", default_enabled=False)
+
+        assert config.provider == LLMProviderType.NONE
+
+    def test_openai_config_from_env(self, monkeypatch):
+        """Test OpenAI config reads from environment vars."""
+        monkeypatch.setenv("LLM_PROVIDER", "openai")
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        monkeypatch.setenv("LLM_MODEL", "gpt-4o-mini")
+        monkeypatch.setenv("LLM_BASE_URL", "https://api.openai.example/v1")
+        monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "45")
+
+        config = LLMConfig.from_env()
+
+        assert config.provider == LLMProviderType.OPENAI
+        assert config.api_key == "test-key"
+        assert config.model == "gpt-4o-mini"
+        assert config.base_url == "https://api.openai.example/v1"
+        assert config.timeout_seconds == 45
+
+    def test_alibaba_config_from_env(self, monkeypatch):
+        """Test Alibaba config reads from environment vars."""
+        monkeypatch.setenv("LLM_PROVIDER", "alibaba")
+        monkeypatch.setenv("DASHSCOPE_API_KEY", "dash-key")
+        monkeypatch.setenv("LLM_MODEL", "qwen-plus")
+        monkeypatch.setenv("LLM_BASE_URL", "https://dashscope.aliyuncs.com/v1")
+        monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "30")
+
+        config = LLMConfig.from_env()
+
+        assert config.provider == LLMProviderType.ALIBABA
+        assert config.api_key == "dash-key"
+        assert config.model == "qwen-plus"
+        assert config.base_url == "https://dashscope.aliyuncs.com/v1"
+        assert config.timeout_seconds == 30
