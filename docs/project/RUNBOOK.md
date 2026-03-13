@@ -29,16 +29,16 @@ tests/
 
 ## 3. 実装順
 
-### Step 0. 上流 artifact を正規化する
+### Step 0. workflow でロードマップ化可否を判定する
 
-`insight-agent` の `output_schema_v2` を使う場合は、先に request schema へ写像してから以降の手順へ進む。
+insight-agent の output_schema_v2 を含む上流 artifact を使う場合でも、本ツールへ直接流し込まない。先に workflow 側で「ロードマップ化する対象か」を判定し、planning-ready な request を組み立ててから以降の手順へ進む。
 
 最低限確認する項目:
 
-- `problems[0]` から `problem_statement` を組み立てたか
-- `insights[*]` を 1 件以上取り込めているか
-- `risk_notes[*]` / `open_questions[*]` から `constraints` や `known_failures` を作れたか
-- `evidence_refs[*]` と artifact path を request 側へ残したか
+- `problem_statement` が 1 件に絞れているか
+- `insights[*]`, `constraints[*]`, `available_assets[*]` を 1 件以上そろえられているか
+- 未整理論点を `known_failures`, `evidence_refs`, `notes`, `assumptions` へ退避できているか
+- 「探索継続」ではなく「計画化してよい」状態まで対象が絞れているか
 
 接続用サンプル:
 
@@ -68,7 +68,7 @@ tests/
 
 最低限の処理順は以下とする。
 
-1. 入力正規化
+1. planning-ready request の組み立て
 2. 課題再定義
 3. 成功条件生成
 4. 仮説生成
@@ -112,7 +112,7 @@ tests/
 
 - schema validation を CI なしでもローカルで回せるようにする
 - examples を success / failure / invalid request / validate の 4 系統に分ける
-- upstream 正規化例として `request.from_insight_agent.json` を維持する
+- workflow 判定後 request 例として `request.from_insight_agent.json` を維持する
 - `roadmap_core` の最小ダミー実装で response shape と validation-result shape を先に返せるようにする
 - `next_actions` の生成規則をユニットテスト化する
 
@@ -125,3 +125,4 @@ tests/
 - `validate` の invalid request に対して `validation-result.schema.json` 準拠の応答を返せる
 - broad problem に対して `failures` と `open_questions` を返せる
 - CLI / HTTP / MCP が同一 contract を使っている
+

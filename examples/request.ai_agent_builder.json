@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run_sample_full_001",
+  "mode": "roadmap",
+  "response_language": "ja",
+  "problem_statement": {
+    "problem_id": "pb_agent_contract",
+    "title": "AIエージェント構築フローをMVP化する",
+    "statement": "ローカル文書を読み、validate と run を区別しながら段階的に計画を返せるAIエージェントを、小規模チームでも実装できる形にしたい。",
+    "background": "要件定義、I/F 契約、サンプル出力の質が揃わないと、実装より前に認識ズレが起きやすい。",
+    "desired_outcome": "同期MVPとして動くCLI / HTTP / MCP と、再現可能なサンプル入出力一式を揃える。"
+  },
+  "insights": [
+    {
+      "insight_id": "in_scope",
+      "statement": "課題発見とロードマップ生成を混ぜると、次アクションが抽象化しやすい。",
+      "source": "設計レビュー",
+      "importance": "high"
+    },
+    {
+      "insight_id": "in_contract",
+      "statement": "validate と run の返却契約を分けると、実装と説明が安定する。",
+      "source": "I/F 再確認",
+      "importance": "high"
+    },
+    {
+      "insight_id": "in_examples",
+      "statement": "良いサンプル入出力があると、AIエージェントの使い方と完成形を共有しやすい。",
+      "source": "利用者観察",
+      "importance": "medium"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "co_schedule",
+      "category": "time",
+      "statement": "2週間以内に最小版を動かしたい。",
+      "severity": "hard"
+    },
+    {
+      "constraint_id": "co_team",
+      "category": "team",
+      "statement": "少人数で保守できる薄いwrapper構成を維持したい。",
+      "severity": "soft"
+    },
+    {
+      "constraint_id": "co_scope",
+      "category": "technology",
+      "statement": "同期MVP、単一課題、永続化なしの境界を守る。",
+      "severity": "hard"
+    }
+  ],
+  "available_assets": [
+    {
+      "asset_id": "as_docs",
+      "type": "document",
+      "name": "設計文書",
+      "description": "README、requirements、specification、interfaces がある。"
+    },
+    {
+      "asset_id": "as_impl",
+      "type": "component",
+      "name": "deterministic planner",
+      "description": "request から roadmap response を返すコア実装がある。"
+    },
+    {
+      "asset_id": "as_tests",
+      "type": "document",
+      "name": "テスト群",
+      "description": "contract / unit / integration test がある。"
+    }
+  ],
+  "known_failures": [
+    {
+      "failure_id": "kf_contract_blur",
+      "statement": "契約を後回しにすると wrapper 間のズレ修正が増える。",
+      "source": "過去の試作"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "ref_id": "ev_brief",
+      "kind": "document",
+      "summary": "AIエージェントMVPの目的、制約、既知の失敗をまとめた要件メモ。"
+    }
+  ],
+  "notes": [
+    "サンプル入力と出力を残し、README から辿れるようにしたい。"
+  ],
+  "priority_hint": "high",
+  "assumptions": [
+    "初回は deterministic planner で十分",
+    "memory や tool routing は次フェーズで拡張する"
+  ]
+}

@@ -7,7 +7,6 @@ import pytest
 from jsonschema import Draft202012Validator
 
 
-# Load schemas
 SCHEMAS_DIR = Path(__file__).parent.parent.parent / "schemas"
 EXAMPLES_DIR = Path(__file__).parent.parent.parent / "examples"
 
@@ -27,6 +26,13 @@ def response_schema():
 
 
 @pytest.fixture
+def validation_result_schema():
+    """Load validation-result schema."""
+    with open(SCHEMAS_DIR / "validation-result.schema.json", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def error_schema():
     """Load error schema."""
     with open(SCHEMAS_DIR / "error.schema.json", encoding="utf-8") as f:
@@ -36,45 +42,64 @@ def error_schema():
 class TestRequestSchema:
     """Tests for request schema validation."""
 
-    def test_request_minimal_valid(self, request_schema):
-        """Test that minimal request is valid."""
-        with open(EXAMPLES_DIR / "request.minimal.json", encoding="utf-8") as f:
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "request.minimal.json",
+            "request.full.json",
+            "request.ai_agent_builder.json",
+            "request.from_insight_agent.json",
+        ],
+    )
+    def test_request_examples_valid(self, request_schema, filename):
+        """Test that request examples are valid."""
+        with open(EXAMPLES_DIR / filename, encoding="utf-8") as f:
             data = json.load(f)
 
         validator = Draft202012Validator(request_schema)
         errors = list(validator.iter_errors(data))
-        assert errors == [], f"Validation errors: {errors}"
-
-    def test_request_full_valid(self, request_schema):
-        """Test that full request is valid."""
-        with open(EXAMPLES_DIR / "request.full.json", encoding="utf-8") as f:
-            data = json.load(f)
-
-        validator = Draft202012Validator(request_schema)
-        errors = list(validator.iter_errors(data))
-        assert errors == [], f"Validation errors: {errors}"
+        assert errors == [], f"Validation errors in {filename}: {errors}"
 
 
 class TestResponseSchema:
     """Tests for response schema validation."""
 
-    def test_response_success_valid(self, response_schema):
-        """Test that success response is valid."""
-        with open(EXAMPLES_DIR / "response.success.json", encoding="utf-8") as f:
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "response.success.json",
+            "response.failure.json",
+            "response.ai_agent_builder.json",
+        ],
+    )
+    def test_response_examples_valid(self, response_schema, filename):
+        """Test that response examples are valid."""
+        with open(EXAMPLES_DIR / filename, encoding="utf-8") as f:
             data = json.load(f)
 
         validator = Draft202012Validator(response_schema)
         errors = list(validator.iter_errors(data))
-        assert errors == [], f"Validation errors: {errors}"
+        assert errors == [], f"Validation errors in {filename}: {errors}"
 
-    def test_response_failure_valid(self, response_schema):
-        """Test that failure response is valid."""
-        with open(EXAMPLES_DIR / "response.failure.json", encoding="utf-8") as f:
+
+class TestValidationResultSchema:
+    """Tests for validation-result schema validation."""
+
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            "validation.success.json",
+            "validation.failure.json",
+        ],
+    )
+    def test_validation_result_examples_valid(self, validation_result_schema, filename):
+        """Test that validation-result examples are valid."""
+        with open(EXAMPLES_DIR / filename, encoding="utf-8") as f:
             data = json.load(f)
 
-        validator = Draft202012Validator(response_schema)
+        validator = Draft202012Validator(validation_result_schema)
         errors = list(validator.iter_errors(data))
-        assert errors == [], f"Validation errors: {errors}"
+        assert errors == [], f"Validation errors in {filename}: {errors}"
 
 
 class TestErrorSchema:

@@ -7,6 +7,7 @@ from typing import Any
 
 from roadmap_core.models.error import ErrorResponse
 from roadmap_core.models.response import RoadmapResponse
+from roadmap_core.models.validation import ValidationResult
 
 
 class JsonPresenter:
@@ -14,38 +15,20 @@ class JsonPresenter:
 
     @staticmethod
     def present_response(response: RoadmapResponse, indent: int = 2) -> str:
-        """Format a roadmap response as JSON.
-
-        Args:
-            response: The response to format.
-            indent: JSON indentation level.
-
-        Returns:
-            JSON string representation.
-        """
+        """Format a roadmap response as JSON."""
         return response.model_dump_json(indent=indent)
 
     @staticmethod
     def present_error(error: ErrorResponse, indent: int = 2) -> str:
-        """Format an error response as JSON.
-
-        Args:
-            error: The error to format.
-            indent: JSON indentation level.
-
-        Returns:
-            JSON string representation.
-        """
+        """Format an error response as JSON."""
         return error.model_dump_json(indent=indent)
 
     @staticmethod
+    def present_validation_result(result: ValidationResult, indent: int = 2) -> str:
+        """Format a validation result as JSON."""
+        return result.model_dump_json(indent=indent)
+
+    @staticmethod
     def parse_request(json_str: str) -> dict[str, Any]:
-        """Parse a JSON request string.
-
-        Args:
-            json_str: JSON string to parse.
-
-        Returns:
-            Parsed dictionary.
-        """
+        """Parse a JSON request string."""
         return json.loads(json_str)

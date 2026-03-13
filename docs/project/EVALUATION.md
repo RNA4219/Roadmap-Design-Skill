@@ -35,6 +35,12 @@
 - `run` の validation error で `error.schema.json` に準拠する
 - `validate` の invalid request で `validation-result.schema.json` に準拠する
 
+### A-07 schema 配布と wrapper 名称の整合
+
+- CLI / HTTP / MCP から `request`, `response`, `validation-result`, `error` schema を取得できる
+- CLI command / HTTP endpoint / MCP tool 名が `docs/src/interfaces.md` と一致する
+- 互換 alias を残す場合も README では正規名だけを案内する
+
 ## 2. 契約テスト観点
 
 - `examples/request.minimal.json` が request schema を通る
@@ -44,6 +50,7 @@
 - `examples/response.failure.json` が response schema を通る
 - `examples/validation.success.json` が validation-result schema を通る
 - `examples/validation.failure.json` が validation-result schema を通る
+- schema 配布 I/F で返る 4 種類の schema が `schemas/` と一致する
 
 ## 3. レビュー観点
 
@@ -52,6 +59,8 @@
 - `next_actions` が抽象論ではなく成果物ベースになっているか
 - `failures` と error envelope の役割が分離されているか
 - `validate` と `run` で invalid input の返却契約が混線していないか
+- schema 配布 I/F の返却内容が `schemas/` とズレていないか
+- wrapper 名称と interfaces.md の案内が乖離していないか
 - 将来拡張と MVP 境界が混ざっていないか
 
 ## 4. 実装時の最低テストセット
@@ -62,5 +71,9 @@
 - schema version mismatch
 - empty insight / empty constraint / empty asset の拒否
 - traceability field の保持
-- insight-agent artifact から request schema への写像確認
+- workflow 判定後の request が planning-ready 条件を満たすことの確認
 - `validate` success / failure fixture の契約確認
+- schema 配布 I/F の snapshot か本文一致確認
+- wrapper 正規名の疎通確認
+
+

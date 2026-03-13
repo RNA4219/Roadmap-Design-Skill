@@ -27,9 +27,9 @@ from roadmap_core.models.response import (
     SolutionOption,
     SuccessCriterion,
 )
+from roadmap_core.models.validation import ValidationIssue, ValidationResult
 
 __all__ = [
-    # Request models
     "RoadmapRequest",
     "ProblemStatement",
     "InsightItem",
@@ -37,7 +37,6 @@ __all__ = [
     "AssetItem",
     "KnownFailure",
     "EvidenceRef",
-    # Response models
     "RoadmapResponse",
     "RunMeta",
     "ProblemDefinition",
@@ -53,7 +52,8 @@ __all__ = [
     "OpenQuestion",
     "FailureItem",
     "Confidence",
-    # Error models
     "ErrorResponse",
     "ErrorCode",
+    "ValidationIssue",
+    "ValidationResult",
 ]

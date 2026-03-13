@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run_from_insight_251214982v1",
+  "mode": "roadmap",
+  "response_language": "ja",
+  "problem_statement": {
+    "problem_id": "pb_001",
+    "title": "Prompt repetition の適用条件を見極める",
+    "statement": "Prompt repetition の有効性は広い benchmark 群で支持されているが、評価範囲は 2025年時点の API 実験・特定モデル群・特定 benchmark 構成に限られているため、外的妥当性にはなお注意が必要である",
+    "background": "insight-agent artifact 2512.14982v1.v2.json を request schema に正規化した接続例。",
+    "desired_outcome": "追加評価の優先順位、運用導入条件、次の検証実験を持つ実装可能なロードマップを得る。"
+  },
+  "insights": [
+    {
+      "insight_id": "in_001",
+      "statement": "Prompt repetition is strongly supported as a low-cost accuracy booster for non-reasoning LLM settings, while its deployment framing should still be read within tested API/model/benchmark boundaries.",
+      "source": "insight-agent: ins_v2_001",
+      "importance": "high"
+    },
+    {
+      "insight_id": "in_002",
+      "statement": "運用条件を切り分ければ、精度改善の利点と latency 例外を両立した導入設計が可能になる。",
+      "source": "insight-agent: risk/open question synthesis",
+      "importance": "medium"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "co_external_validity",
+      "category": "technology",
+      "statement": "特定モデル・特定 benchmark でのみ検証された結果を、そのまま一般化しない。",
+      "severity": "hard"
+    },
+    {
+      "constraint_id": "co_latency",
+      "category": "technology",
+      "statement": "長文 prompt、reasoning 利用、Anthropic 系長文入力では latency 例外を考慮する。",
+      "severity": "soft"
+    }
+  ],
+  "available_assets": [
+    {
+      "asset_id": "as_artifact",
+      "type": "document",
+      "name": "insight-agent artifact",
+      "description": "C:/Users/ryo-n/Codex_dev/insight-agent/artifacts/2512.14982v1.v2.json"
+    },
+    {
+      "asset_id": "as_pdf",
+      "type": "document",
+      "name": "source paper",
+      "description": "2512.14982v1 に対する要約と evidence_refs が利用できる。"
+    },
+    {
+      "asset_id": "as_eval",
+      "type": "other",
+      "name": "next_checks bundle",
+      "description": "artifact 内の next_checks をそのまま実験候補に使える。"
+    }
+  ],
+  "known_failures": [
+    {
+      "failure_id": "kf_generalization",
+      "statement": "別データ分布や未見タスクでの有効性を未検証のまま導入すると、外的妥当性の過信につながる。",
+      "source": "insight-agent: pb_001 / oq_pb_001"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "ref_id": "ev_001",
+      "kind": "document",
+      "summary": "When not using reasoning, repeating the input prompt improves performance for popular models without increasing generated tokens."
+    },
+    {
+      "ref_id": "ev_002",
+      "kind": "document",
+      "summary": "長文条件や reasoning 利用、Anthropic 系長文入力では latency 例外があり、導入条件の明文化が必要。"
+    }
+  ],
+  "notes": [
+    "Generated from insight-agent artifact 2512.14982v1.v2.json.",
+    "support_bundle や routing_plan は request schema を広げず notes / assets に退避している。"
+  ],
+  "priority_hint": "medium",
+  "assumptions": [
+    "初回は API 実験条件に近い環境で再現評価する",
+    "外的妥当性の確認は cross-domain eval を最優先にする"
+  ]
+}

@@ -102,11 +102,13 @@ validation error と processing error では、以下の shape を使う。
 
 - 正常系 request: `examples/request.full.json`
 - 最小 request: `examples/request.minimal.json`
-- upstream 正規化 request: `examples/request.from_insight_agent.json`
+- workflow 判定後 request: `examples/request.from_insight_agent.json`
 - 正常系 response: `examples/response.success.json`
 - 失敗系 response: `examples/response.failure.json`
 - validate 成功: `examples/validation.success.json`
 - validate 失敗: `examples/validation.failure.json`
+
+
 
 
 

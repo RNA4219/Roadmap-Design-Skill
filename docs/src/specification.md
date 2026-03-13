@@ -9,7 +9,7 @@
 Roadmap Design Skill は以下の順で処理する。
 
 1. request schema validation
-2. 入力正規化
+2. workflow 判定後入力の受領
 3. 課題再定義
 4. 成功条件生成
 5. 仮説生成
@@ -46,19 +46,16 @@ Roadmap Design Skill は以下の順で処理する。
 - `insights` `constraints` `available_assets` は順序を保ったまま扱う
 - `importance` や `severity` がない場合は内部既定値を使ってよいが、レスポンスで捏造した事実として扱わない
 
-### 3.3 Upstream artifact normalization
+### 3.3 Workflow boundary
 
-`insight-agent` の `output_schema_v2` を受ける場合、planner 本体へ渡す前に以下の正規化を行う。
+planner 本体は request schema 準拠の入力のみを受け、上流 artifact の shape や workflow 判定ロジックには依存しない。
 
-- `problem_statement.problem_id`: `problems[0].id` があれば `pb_` prefix を維持して再利用し、なければ `pb_from_insight` 系で生成する
-- `problem_statement.title`: `problems[0].problem_type` または artifact の主題を短く整形して作る
-- `problem_statement.statement`: `problems[0].statement` を優先し、欠ける場合は `reasoning_summary.headline` を使う
-- `insights[*]`: `insights[*].id` と `statement` を移し、`support_bundle` や `confidence` は `source` や `notes` 側へ要約する
-- `constraints[*]`: `risk_notes[*].statement`、`open_questions[*].statement`、`reasoning_summary.what_remains_open[*]` から hard/soft を判断して組み立てる
-- `available_assets[*]`: artifact 自体、元 PDF、参照 repo、利用 Skill を document / dataset / skill として列挙する
-- `evidence_refs[*]`: `evidence_id` と `quote` を短い要約へ変換し、`kind=document` を基本とする
+workflow 側は、本ツールへ渡す前に少なくとも次を満たす。
 
-生の `nodes[*]` や `routing_plan` を request schema の新規 field として露出させない。MVP では planner が必要とする計画材料だけを抽出し、それ以外は `notes` に寄せる。
+- problem_statement が 1 件に絞られている
+- insights, constraints, available_assets が最低 1 件ずつある
+- 未整理の補足は known_failures, evidence_refs, notes, assumptions に退避されている
+- 「探索継続」ではなく「ロードマップ化してよい」状態まで対象が絞られている
 
 ## 4. Response Contract
 
@@ -243,9 +240,37 @@ Roadmap Design Skill は以下の順で処理する。
 - sync MVP の境界が保たれている
 - `examples/request.from_insight_agent.json` で upstream 連携の写像例が確認できる
 
+## 10. 次期実装優先順位
 
+追加ブラッシュアップ要件は次の順で実装する。
 
+1. `validate` 契約の統一
+2. schema 配布 I/F の追加
+3. workflow 判定後入力契約の固定
+4. examples / artifacts / contract test の同期
+5. wrapper 名称と endpoint の整理
 
+この順序を採る理由は、contract を先に固定しないと examples と wrapper 実装が再びズレやすいためである。
 
+### 10.1 `validate` 統一の実装指針
+
+- `SchemaValidator` は `validation-result.schema.json` も読み込む
+- validation issue は Pydantic / JSON Schema の生エラーをそのまま返さず、`code`, `field`, `message` へ正規化する
+- CLI `validate`, HTTP `:validate`, MCP `roadmap.validate` は同一 serializer を使う
+
+### 10.2 schema 配布 I/F の実装指針
+
+- schema の取得元は `schemas/` ディレクトリを正本とする
+- wrapper ごとに別 schema を持たず、同じファイルを返す
+
+### 10.3 workflow 境界の実装指針
+
+- insight-agent artifact の入力 shape 依存を planner 本体へ持ち込まない
+- workflow 判定と request 組み立ては上位フローの責務とし、本ツールは request schema 準拠入力だけを受ける
+
+### 10.4 examples 同期の実装指針
+
+- README で参照する examples は contract test の fixture に含める
+- 追加した sample は再生成コマンドを README または task doc に残す
 
 

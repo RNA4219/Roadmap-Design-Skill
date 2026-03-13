@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from json import JSONDecodeError
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from roadmap_core.llm.base import LLMConfig, LLMProviderType
 from roadmap_core.models.error import ErrorResponse
 from roadmap_core.models.request import RoadmapRequest
+from roadmap_core.models.validation import ValidationResult
 from roadmap_core.planner.llm_planner import LLMRoadmapPlanner
 from roadmap_core.planner.roadmap_planner import RoadmapPlanner
+from roadmap_core.schema_loader import UnknownSchemaKindError, load_schema
+from roadmap_core.validators.request_payload_validator import validate_request_payload as build_validation_result
 
 app = FastAPI(
     title="Roadmap Design Skill",
@@ -53,6 +57,7 @@ def get_planner() -> RoadmapPlanner | LLMRoadmapPlanner:
 
 
 @app.post("/v1/run")
+@app.post("/v1/roadmaps:plan")
 async def run_roadmap(request: dict) -> dict:
     """Run roadmap generation."""
     try:
@@ -72,33 +77,59 @@ async def run_roadmap(request: dict) -> dict:
             response = planner.plan(validated_request)
         return response.model_dump(mode="json")
 
-    except ValidationError as e:
+    except ValidationError as exc:
         error = ErrorResponse.invalid_input(
             message="Request validation failed",
-            details={"errors": e.errors()},
+            details={"errors": exc.errors()},
             trace_id="http",
         )
-        raise HTTPException(status_code=422, detail=error.model_dump())
-
+        raise HTTPException(status_code=400, detail=error.model_dump())
     except HTTPException:
         raise
-
-    except Exception as e:
+    except Exception as exc:
         error = ErrorResponse.internal_error(
-            message=str(e),
+            message=str(exc),
             trace_id="http",
         )
         raise HTTPException(status_code=500, detail=error.model_dump())
 
 
 @app.post("/v1/validate")
-async def validate_request(request: dict) -> dict:
+@app.post("/v1/roadmaps:validate")
+async def validate_roadmap_request(request: Request) -> dict:
     """Validate a roadmap request without generating."""
     try:
-        RoadmapRequest.model_validate(request)
-        return {"valid": True, "errors": []}
-    except ValidationError as e:
-        return {"valid": False, "errors": e.errors()}
+        payload = await request.json()
+    except JSONDecodeError as exc:
+        return ValidationResult.invalid_json(f"Invalid JSON: {exc.msg}").model_dump(mode="json")
+    except Exception as exc:
+        error = ErrorResponse.internal_error(
+            message=str(exc),
+            trace_id="http-validate",
+        )
+        raise HTTPException(status_code=500, detail=error.model_dump())
+
+    return build_validation_result(payload).model_dump(mode="json")
+
+
+@app.get("/v1/roadmaps:schema/{kind}")
+async def get_schema_document(kind: str) -> dict:
+    """Return one of the canonical JSON schemas."""
+    try:
+        return load_schema(kind)
+    except UnknownSchemaKindError as exc:
+        error = ErrorResponse.invalid_input(
+            message=str(exc),
+            details={"kind": kind},
+            trace_id="http-schema",
+        )
+        raise HTTPException(status_code=400, detail=error.model_dump())
+    except Exception as exc:
+        error = ErrorResponse.internal_error(
+            message=str(exc),
+            trace_id="http-schema",
+        )
+        raise HTTPException(status_code=500, detail=error.model_dump())
 
 
 @app.get("/health")
@@ -127,4 +158,3 @@ async def http_exception_handler(request, exc):  # noqa: ANN001, ARG001
 def run_server(host: str = "0.0.0.0", port: int = 8000) -> None:
     """Run the HTTP server."""
     uvicorn.run(app, host=host, port=port)
-
