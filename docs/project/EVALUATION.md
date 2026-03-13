@@ -74,6 +74,7 @@
 - workflow 判定後の request が planning-ready 条件を満たすことの確認
 - `validate` success / failure fixture の契約確認
 - schema 配布 I/F の snapshot か本文一致確認
-- wrapper 正規名の疎通確認
+- wrapper 正規名の疎通確認`r`n- alias を残す場合、README が正規名のみを案内していることの確認
+
 
 

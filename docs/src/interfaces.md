@@ -82,6 +82,13 @@
 
 - output: 指定された schema 本文
 
+### 4.3 Compatibility policy
+
+- 正規名は `roadmap.plan`, `roadmap.validate`, `roadmap.schema` とする
+- legacy alias は互換維持のため一時的に残してよい
+- README / docs / examples / 新規実装では正規名だけを案内する
+- alias を残す場合は unit test で互換性を固定し、削除時に changelog 相当の周知を行う
+
 ## 5. Error envelope
 
 validation error と processing error では、以下の shape を使う。
@@ -107,6 +114,9 @@ validation error と processing error では、以下の shape を使う。
 - 失敗系 response: `examples/response.failure.json`
 - validate 成功: `examples/validation.success.json`
 - validate 失敗: `examples/validation.failure.json`
+
+
+
 
 
 
