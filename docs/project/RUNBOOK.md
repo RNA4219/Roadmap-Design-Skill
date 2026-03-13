@@ -29,19 +29,38 @@ tests/
 
 ## 3. 実装順
 
+### Step 0. 上流 artifact を正規化する
+
+`insight-agent` の `output_schema_v2` を使う場合は、先に request schema へ写像してから以降の手順へ進む。
+
+最低限確認する項目:
+
+- `problems[0]` から `problem_statement` を組み立てたか
+- `insights[*]` を 1 件以上取り込めているか
+- `risk_notes[*]` / `open_questions[*]` から `constraints` や `known_failures` を作れたか
+- `evidence_refs[*]` と artifact path を request 側へ残したか
+
+接続用サンプル:
+
+- `examples/request.from_insight_agent.json`
+- 元 artifact 例: `C:\Users\ryo-n\Codex_dev\insight-agent\artifacts\2512.14982v1.v2.json`
+
 ### Step 1. 契約を固定する
 
 - `schemas/roadmap-request.schema.json`
 - `schemas/roadmap-response.schema.json`
+- `schemas/validation-result.schema.json`
 - `schemas/error.schema.json`
 - `examples/request.full.json`
 - `examples/response.success.json`
+- `examples/validation.success.json`
 
 ここで JSON Schema と fixture の整合を先に取り、以降のコードはこの契約に従う。
 
 ### Step 2. モデルとバリデータを実装する
 
-- request / response / error の内部モデル
+- request / response / validation-result / error の内部モデル
+- `run` と `validate` の分岐
 - hard validation と soft planning failure の切り分け
 - ID prefix と配列順序の安定化
 
@@ -70,13 +89,15 @@ tests/
 - examples が schema validation を通る
 - wrapper ごとの I/O が同一 shape を返す
 - 広すぎる課題に対して無理な成功レスポンスを返さない
+- `examples/request.from_insight_agent.json` が request schema を通る
+- `examples/validation.success.json` と `examples/validation.failure.json` が validation-result schema を通る
 
 ## 4. 推奨実装ポリシー
 
 - 先にラッパーを作り込まない
 - LLM 呼び出し有無に関わらず、`roadmap_core` の入出力は純粋関数に寄せる
 - response の未使用フィールドを勝手に削らない
-- 失敗時も error envelope か structured response のどちらかに正規化する
+- `run` の invalid input と `validate` の invalid input の返却契約を混線させない
 
 ## 5. 推奨初期スタック
 
@@ -90,8 +111,9 @@ tests/
 ## 6. 先に着手すべきタスク
 
 - schema validation を CI なしでもローカルで回せるようにする
-- examples を success / failure / invalid request の 3 系統に分ける
-- `roadmap_core` の最小ダミー実装で response shape を先に返せるようにする
+- examples を success / failure / invalid request / validate の 4 系統に分ける
+- upstream 正規化例として `request.from_insight_agent.json` を維持する
+- `roadmap_core` の最小ダミー実装で response shape と validation-result shape を先に返せるようにする
 - `next_actions` の生成規則をユニットテスト化する
 
 ## 7. 実装完了判定
@@ -99,6 +121,7 @@ tests/
 以下を満たしたら最初の実装完了とする。
 
 - valid request から valid response を返せる
-- invalid request に対して `error.schema.json` 準拠の応答を返せる
+- `run` の invalid request に対して `error.schema.json` 準拠の応答を返せる
+- `validate` の invalid request に対して `validation-result.schema.json` 準拠の応答を返せる
 - broad problem に対して `failures` と `open_questions` を返せる
 - CLI / HTTP / MCP が同一 contract を使っている

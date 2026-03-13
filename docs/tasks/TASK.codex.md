@@ -157,7 +157,7 @@ requirements:
     - 同期実行のみ
     - 1リクエスト1課題
 acceptance_criteria:
-  - EVALUATION.md の A-01～A-06 を満たす
+  - docs/project/EVALUATION.md の A-01～A-06 を満たす
 ```
 
 ### Phase 3: ラッパー実装タスク

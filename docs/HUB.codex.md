@@ -20,11 +20,11 @@ next_review_due: 2026-04-10
 
 | 分類 | ファイル | 優先順 | 備考 |
 |------|----------|--------|------|
-| Blueprint | `BLUEPRINT.md` | 高 | 最上位方針・解くこと/解かないこと |
-| Runbook | `RUNBOOK.md` | 中 | 実装着手順・推奨レイアウト |
-| Guardrails | `GUARDRAILS.md` | 高 | 全メンバー必読・行動指針 |
-| Evaluation | `EVALUATION.md` | 中 | 受け入れ基準・検収条件 |
-| Checklist | `CHECKLISTS.md` | 低 | リリース/レビュー確認項目 |
+| Blueprint | `docs/project/BLUEPRINT.md` | 高 | 最上位方針・解くこと/解かないこと |
+| Runbook | `docs/project/RUNBOOK.md` | 中 | 実装着手順・推奨レイアウト |
+| Guardrails | `docs/project/GUARDRAILS.md` | 高 | 全メンバー必読・行動指針 |
+| Evaluation | `docs/project/EVALUATION.md` | 中 | 受け入れ基準・検収条件 |
+| Checklist | `docs/project/CHECKLISTS.md` | 低 | リリース/レビュー確認項目 |
 | Requirements | `docs/src/requirements.md` | 高 | 正式な要件定義 |
 | Specification | `docs/src/specification.md` | 高 | 正規仕様 |
 | Interfaces | `docs/src/interfaces.md` | 高 | CLI/HTTP/MCP 外部契約 |
@@ -42,7 +42,7 @@ next_review_due: 2026-04-10
 
 1. **スキャン**: ルート配下を再帰探索し、Markdown front matter (`---`) を含むファイルを優先取得。
 2. **ノード生成**: 各ファイルから `##` レベルの節をノード化し、`Priority` `Dependencies` などのキーワードを抽出。
-3. **依存解決**: RUNBOOK.md の実装順（Step 1-5）に従い、依存関係を解析。
+3. **依存解決**: docs/project/RUNBOOK.md の実装順（Step 0-5）に従い、依存関係を解析。
 4. **粒度調整**: ノード内の ToDo / 箇条書きを単位作業へ分割し、`<= 0.5d` を目安にまとめ直し。
 5. **テンプレート投影**: 各作業ユニットを `TASK.*-MM-DD-YYYY` 形式の Task Seed (`Objective` `Requirements` `Commands`) へ変換。
 6. **出力整形**: 優先度、依存、担当の有無でソートし、GitHub Issue もしくは PR下書きとしてJSON/YAMLに整形。
@@ -107,7 +107,7 @@ in_progress → blocked → in_progress（解除後に戻す）
 
 ```yaml
 - task_id: 20260310-01
-  source: RUNBOOK.md#Step-1
+  source: docs/project/RUNBOOK.md#Step-1
   objective: JSON Schema 契約の固定と fixture 整合確認
   scope:
     in: [schemas/, examples/]
@@ -127,3 +127,4 @@ in_progress → blocked → in_progress（解除後に戻す）
 - タスク自動生成ツールはドライランでJSON出力を確認後にIssue化
 - 生成後は `CHANGELOG.md` へ反映済みタスクを移すことで履歴が追える
 - MVP 境界（同期実行・単一課題）を維持し、将来拡張を混在させない
+

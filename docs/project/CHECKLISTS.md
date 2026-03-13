@@ -12,20 +12,20 @@ Roadmap Design Skill のチェックリスト。
 
 ## Development
 
-- `TASK.*` を起票・更新し、`HUB.codex.md` の運用ルールに沿ってスコープとフォローアップを同期
-- 着手前に `BLUEPRINT.md` と `GUARDRAILS.md` を読み合わせ、最小差分と既存ガードレールへ整合
-- テストを先行させ、`EVALUATION.md` で定義された受け入れ基準を完了
+- `TASK.*` を起票・更新し、`docs/HUB.codex.md` の運用ルールに沿ってスコープとフォローアップを同期
+- 着手前に `docs/project/BLUEPRINT.md` と `docs/project/GUARDRAILS.md` を読み合わせ、最小差分と既存ガードレールへ整合
+- テストを先行させ、`docs/project/EVALUATION.md` で定義された受け入れ基準を完了
 - JSON Schema 契約（`schemas/`）の変更は、`examples/` との整合確認を必須とする
-- Runbook 連携が必要な作業は `RUNBOOK.md` へ手順差分を反映し、参照リンクを Task Seed に追記
+- Runbook 連携が必要な作業は `docs/project/RUNBOOK.md` へ手順差分を反映し、参照リンクを Task Seed に追記
 - MVP 境界（同期実行・単一課題・永続化なし）を維持し、将来拡張を混在させない
 
 ## Pull Request / Review
 
 - 失敗させたテストが緑化する最小コミット単位を維持し、差分を可視化
 - `CHANGELOG.md` の `[Unreleased]` に Task Seed 番号付きで成果を追記
-- PR 説明欄から `BLUEPRINT.md`・`RUNBOOK.md`・`EVALUATION.md` 等の参照先へ遷移できるようリンクを付す
-- レビュー観点は `EVALUATION.md` の「レビュー観点」と `GUARDRAILS.md` を再確認
-- ラベル運用・テンプレ遵守は `HUB.codex.md` と `TASK.codex.md` のタスク分割フローに合わせる
+- PR 説明欄から `docs/project/BLUEPRINT.md`・`docs/project/RUNBOOK.md`・`docs/project/EVALUATION.md` 等の参照先へ遷移できるようリンクを付す
+- レビュー観点は `docs/project/EVALUATION.md` の「レビュー観点」と `docs/project/GUARDRAILS.md` を再確認
+- ラベル運用・テンプレ遵守は `docs/HUB.codex.md` と `docs/tasks/TASK.codex.md` のタスク分割フローに合わせる
 - CLI / HTTP / MCP が同一契約（schema）を使用していることを確認
 
 ## Release
@@ -36,7 +36,7 @@ Roadmap Design Skill のチェックリスト。
 - 未反映の `TASK.*` が残っていないか確認し、成果を `[Unreleased]` へ通番付きで転記済みかチェック
 - `schema_version` の更新が必要か確認し、破壊的変更の場合は major version を更新
 - 新規 ADR を含むリリースでは `docs/ADR/` の索引更新を完了し、レビューフローで確認する
-- 受け入れ基準（`EVALUATION.md`）に対するエビデンス
+- 受け入れ基準（`docs/project/EVALUATION.md`）に対するエビデンス
 - 影響範囲の再確認
 - PR に `type:*` および `semver:*` ラベルを付与済み
 - 配布物へ `LICENSE` / `NOTICE` を同梱済み

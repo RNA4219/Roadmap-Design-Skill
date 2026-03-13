@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "roadmap",
+  "response_language": "ja",
+  "problem_statement": {
+    "problem_id": "pb_too_short",
+    "title": "短すぎる課題",
+    "statement": "短い"
+  },
+  "insights": [
+    {
+      "insight_id": "in_short",
+      "statement": "情報が足りない。"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "co_short",
+      "category": "other",
+      "statement": "追加情報が必要。",
+      "severity": "hard"
+    }
+  ],
+  "available_assets": [
+    {
+      "asset_id": "as_short",
+      "type": "document",
+      "name": "メモ",
+      "description": "短いメモだけがある。"
+    }
+  ]
+}

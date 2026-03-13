@@ -31,15 +31,19 @@
 
 ### A-06 I/F 契約の一貫性
 
-- CLI / HTTP / MCP が同一 request / response schema を参照する
-- validation error で `error.schema.json` に準拠する
+- CLI / HTTP / MCP が同一 request / response / validation-result schema を参照する
+- `run` の validation error で `error.schema.json` に準拠する
+- `validate` の invalid request で `validation-result.schema.json` に準拠する
 
 ## 2. 契約テスト観点
 
 - `examples/request.minimal.json` が request schema を通る
 - `examples/request.full.json` が request schema を通る
+- `examples/request.from_insight_agent.json` が request schema を通る
 - `examples/response.success.json` が response schema を通る
 - `examples/response.failure.json` が response schema を通る
+- `examples/validation.success.json` が validation-result schema を通る
+- `examples/validation.failure.json` が validation-result schema を通る
 
 ## 3. レビュー観点
 
@@ -47,6 +51,7 @@
 - 永続化不要という前提と I/F が矛盾していないか
 - `next_actions` が抽象論ではなく成果物ベースになっているか
 - `failures` と error envelope の役割が分離されているか
+- `validate` と `run` で invalid input の返却契約が混線していないか
 - 将来拡張と MVP 境界が混ざっていないか
 
 ## 4. 実装時の最低テストセット
@@ -57,3 +62,5 @@
 - schema version mismatch
 - empty insight / empty constraint / empty asset の拒否
 - traceability field の保持
+- insight-agent artifact から request schema への写像確認
+- `validate` success / failure fixture の契約確認
